@@ -28,7 +28,6 @@ defined('MOODLE_INTERNAL') || die();
 global $CFG;
 require_once($CFG->dirroot . '/blocks/spam_deletion/lib.php');
 
-
 class block_spam_deletion_lib_testcase extends advanced_testcase {
     public function test_invalid_user() {
         $this->setExpectedException('moodle_exception');
@@ -86,11 +85,64 @@ class block_spam_deletion_lib_testcase extends advanced_testcase {
         $lib->set_spammer();
     }
 
-    public function test_normal() {
+    public function test_clear_profile_fields() {
+        global $DB;
         $this->resetAfterTest(true);
 
-        $normaluser = $this->getDataGenerator()->create_user();
-        $one = new spammerlib($normaluser->id);
+        $user = $this->getDataGenerator()->create_user(array('url' => 'http://moodle.org', 'firstaccess' => time()));
+        $spammer = $this->getDataGenerator()->create_user(array('url' => 'http://spamstuff.com', 'firstaccess' => time()));
+
+        $lib = new spammerlib($spammer->id);
+        $this->assertInstanceOf('spammerlib', $lib);
+        $lib->set_spammer();
+
+        // Test that the spammer url has been cleared.
+        $postupdatespammer = $DB->get_record('user', array('id' => $spammer->id));
+        $this->assertNotEquals($postupdatespammer->url, $spammer->url);
+        $this->assertEmpty($postupdatespammer->url);
+
+        // Test that the non-spammer profile url has been left alone.
+        $postupdateuser = $DB->get_record('user', array('id' => $user->id));
+        $this->assertEquals($postupdateuser->url, $user->url);
+    }
+
+    public function test_delete_user_comments() {
+        global $DB;
+        $this->resetAfterTest(true);
+
+        $user = $this->getDataGenerator()->create_user(array('firstaccess' => time()));
+        $spammer = $this->getDataGenerator()->create_user(array('firstaccess' => time()));
+
+        $params = new stdClass();
+        $params->contextid = context_system::instance()->id;
+        $params->commentarea = 'phpunit';
+        $params->itemid = '1';
+        $params->timecreated = time();
+        $params->format = FORMAT_MOODLE;
+
+        for ($i=0; $i<10; $i++) {
+            $params->content = $user->username.'comment'.$i;
+            $params->userid = $user->id;
+            $DB->insert_record('comments', $params);
+
+            $params->content = $spammer->username.'comment'.$i;
+            $params->userid = $spammer->id;
+            $DB->insert_record('comments', $params);
+        }
+
+        $usercommentcount = $DB->count_records('comments', array('userid'=>$user->id));
+        $this->assertEquals($usercommentcount, 10);
+        $spammercommentcount = $DB->count_records('comments', array('userid'=>$spammer->id));
+        $this->assertEquals($spammercommentcount, 10);
+
+        $lib = new spammerlib($spammer->id);
+        $this->assertInstanceOf('spammerlib', $lib);
+        $lib->set_spammer();
+
+        $usercommentcount = $DB->count_records('comments', array('userid'=>$user->id));
+        $this->assertEquals($usercommentcount, 10);
+        $spammercommentcount = $DB->count_records('comments', array('userid'=>$spammer->id));
+        $this->assertEmpty($spammercommentcount);
     }
 
 }
