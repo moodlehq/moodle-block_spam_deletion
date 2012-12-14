@@ -119,7 +119,7 @@ class spammer {
         $params = array('userid' => $userid,
             'forumsub' => $spamstr,
             'forummsg' => $spamstr);
-        $DB->execute('UPDATE {forum_posts} SET subject = :forumsub, message = :forummsg', $params);
+        $DB->execute('UPDATE {forum_posts} SET subject = :forumsub, message = :forummsg WHERE userid = :userid', $params);
     }
 
     /**
