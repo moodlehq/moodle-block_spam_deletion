@@ -25,22 +25,12 @@
 require_once('../../config.php');
 require_once($CFG->dirroot . '/blocks/spam_deletion/lib.php');
 
-//Make sure user has enough capability to process deletion.
-require_login();
-require_sesskey();
-require_capability('block/spam_deletion:spamdelete', get_context_instance(CONTEXT_SYSTEM));
-
-//Get optional and required params
-/**
- * @var int user id for spammer.
- */
+/** @var int user id for spammer.  */
 $userid = required_param('userid', PARAM_INT);
-/**
- * @var bool spammer delete confirmation
- */
+/** @var bool spammer delete confirmation */
 $confirmdelete = optional_param('confirmdelete', 0, PARAM_BOOL);
 
-//Set page before processing.
+// Set page before processing.
 $url = new moodle_url('/blocks/spam_deletion/confirmdelete.php');
 $url->param('id', $userid);
 $PAGE->set_url($url);
@@ -48,18 +38,18 @@ $PAGE->set_context(get_system_context());
 $PAGE->set_title(get_string('confirmdelete', 'block_spam_deletion'));
 $PAGE->set_heading(get_string('confirmdelete', 'block_spam_deletion'));
 
+// Make sure user has enough capability to process deletion.
+require_login();
+require_sesskey();
+require_capability('block/spam_deletion:spamdelete', $PAGE->context);
+
 /**
  * @var moodle_url Return url for profile
  */
 $returnurl = new moodle_url('/user/profile.php', array('id' => $userid));
 
-//Get spammer information
-$spamlib = null;
-if (!empty($userid) && ($userid != $USER->id)) {
-    $spamlib = new spammer($userid);
-} else {
-    throw new moodle_exception('invalidrequest');
-}
+// Get spammer information
+$spamlib = new spammerlib($userid);
 
 // Process spammer deletion request.
 if ($confirmdelete) {
@@ -70,6 +60,6 @@ if ($confirmdelete) {
     $urlyes = new moodle_url('/blocks/spam_deletion/confirmdelete.php', array('userid' => $userid, 'confirmdelete' => '1'));
     $continuebutton = new single_button($urlyes, get_string('yes'));
     $cancelbutton = new single_button($returnurl, get_string('no'), 'get');
-    echo $OUTPUT->confirm(get_string('confirmdeletemsg', 'block_spam_deletion', $spamlib->user->username), $continuebutton, $cancelbutton);
+    echo $OUTPUT->confirm(get_string('confirmdeletemsg', 'block_spam_deletion', $spamlib->get_user()), $continuebutton, $cancelbutton);
     echo $OUTPUT->footer();
 }

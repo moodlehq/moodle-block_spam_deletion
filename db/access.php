@@ -28,5 +28,11 @@ $capabilities = array(
         'riskbitmask' => RISK_DATALOSS,
         'captype' => 'write',
         'contextlevel' => CONTEXT_BLOCK,
+    ),
+
+    'block/spam_deletion:addinstance' => array(
+        'riskbitmask' => RISK_DATALOSS,
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_BLOCK,
     )
 );

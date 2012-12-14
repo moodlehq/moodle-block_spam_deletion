@@ -23,19 +23,18 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 $string['cannotdelete'] = 'Cannot delete content for this account';
-$string['confirmdeletemsg'] = 'Are you sure, you want to mark <strong>{$a}</strong> as spammer? Following user data will be deleted or modified:<br />
-    1. User comments and messages will be deleted.<br />
-    2. Forum post and blog post will be replaced with spam msg.<br />
-    3. Account will be suspended and profile description will be replaced with spam msg.';
+$string['confirmdeletemsg'] = 'Are you sure, you want to mark <strong>{$a->firstname} {$a->lastname} ({$a->username})</strong> as spammer? Data belonging to this user will be blanked out or removed.';
 $string['confirmdelete'] = 'Delete spammer';
 $string['contentremoved'] = 'Content removed by moderator at {$a}';
 $string['countmessage'] = 'Messages: {$a}';
 $string['countblog'] = 'Blog posts: {$a}';
 $string['countforum'] = 'Forum posts: {$a}';
 $string['countcomment'] = 'Comments: {$a}';
+$string['counttags'] = 'Tags: {$a}';
 $string['deletebutton'] = 'Delete spammer';
 $string['notrecentlyaccessed'] = 'The first access date of this account is more than 1 month ago and so the content from this user cannot be deleted.';
 $string['pluginname'] = 'Spam deletion';
+$string['spam_deletion:addinstance'] = 'Add delete spammer block';
 $string['spam_deletion:spamdelete'] = 'Delete Spam';
 $string['spamdescription'] = 'Spammer - spam deleted and account blocked {$a}';
 $string['totalcount'] = 'Total records';

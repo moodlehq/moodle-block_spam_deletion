@@ -40,7 +40,9 @@ require_once($CFG->dirroot . '/blocks/spam_deletion/lib.php');
  */
 class block_spam_deletion extends block_base {
     /**
-     * Initalise member params
+     * Block initialisation
+     *
+     * @return  void
      */
     function init() {
         $this->title = get_string('pluginname', 'block_spam_deletion');
@@ -65,80 +67,51 @@ class block_spam_deletion extends block_base {
     }
 
     /**
-     * updates data before anything else is done, just after instantiating.
-     */
-    function specialization() {
-        // load userdefined title and make sure it's never empty
-        if (empty($this->config->title)) {
-            $this->title = get_string('pluginname','block_spam_deletion');
-        } else {
-            $this->title = $this->config->title;
-        }
-    }
-
-    /**
-     * Return HTML attributes to the outer <div> of the block when it is output.
-     *
-     * @return string
-     */
-    public function html_attributes() {
-        $attributes = parent::html_attributes(); // Get default values
-        $attributes['class'] .= ' block_'. $this->name(); // Append our class to class attribute
-        return $attributes;
-    }
-
-    /**
      * Returns contents of block
      *
-     * @return stdClass
+     * @return   StdClass    containing the block's content
      */
     function get_content() {
         global $CFG, $USER, $OUTPUT;
-        $this->content =  new stdClass;
 
-        //Only user with spamdelete capablity should see this block
+        if ($this->page->pagetype != 'user-profile') {
+            // Only available on the user profile page.
+            return null;
+        }
+
+        // Only user with spamdelete capablity should see this block.
         if (!has_capability('block/spam_deletion:spamdelete', $this->context)) {
+            return null;
+        }
+
+        $this->content = new stdClass;
+
+        $params = $this->page->url->params();
+        if (!spammerlib::is_suspendable_user($params['id'])) {
+            $this->content->text = get_string('cannotdelete', 'block_spam_deletion');
             return $this->content;
         }
-        $params = $this->page->url->params();
-        $spamlib = null;
-        
-        //Get spammer info, if id exists and Pagetype === user-profile and not a current user
-        //Also make sure id is not guest or admin id.
-        $admins = explode(',', $CFG->siteadmins);
-        $guests = explode(',', $CFG->siteguest);
-        if (!empty($params['id']) &&
-                ($this->page->pagetype === 'user-profile') &&
-                ($params['id'] != $USER->id) &&
-                !(in_array($params['id'], $admins) || in_array($params['id'], $guests))) {
-            $spamlib = new spammer($params['id']);
-        }
 
-        //If spammer info available then process, else do nothing.
-        if ($spamlib) {
-            //If deleted or suspended account, then don't do anything.
-            if (!$spamlib->is_active()) {
-                $this->content->text = get_string('cannotdelete', 'block_spam_deletion');
-            } else if (!$spamlib->is_recentuser()) {
-                //If user has first access in last one month then only allow spam deletion
-                $this->content->text = get_string('notrecentlyaccessed', 'block_spam_deletion');
-            } else {
-                //Show spammer data count (blog post, messages, forum and comments)
-                $this->content->text .= $spamlib->show_data_count();
+        $spamlib = new spammerlib($params['id']);
 
-                //Delete button
-                $urlparams = array('userid' => $params['id']);
-                $url = new moodle_url('/blocks/spam_deletion/confirmdelete.php', $urlparams);
-                $buttontext = get_string('deletebutton', 'block_spam_deletion');
-                $button = new single_button($url, $buttontext);
-                $content = $OUTPUT->render($button);
-                $this->content->footer = $content;
-            }
-        } else {
-            //If no spammer info found then you can't do anything.
+        if (!$spamlib->is_active()) {
+            // If deleted or suspended account, then don't do anything.
             $this->content->text = get_string('cannotdelete', 'block_spam_deletion');
+        } else if (!$spamlib->is_recentuser()) {
+            // If user has first access in last one month then only allow spam deletion.
+            $this->content->text = get_string('notrecentlyaccessed', 'block_spam_deletion');
+        } else {
+            // Show spammer data count (blog post, messages, forum and comments).
+            $this->content->text .= $spamlib->show_data_count();
+
+            // Add delete button.
+            $urlparams = array('userid' => $params['id']);
+            $url = new moodle_url('/blocks/spam_deletion/confirmdelete.php', $urlparams);
+            $buttontext = get_string('deletebutton', 'block_spam_deletion');
+            $button = new single_button($url, $buttontext);
+            $content = $OUTPUT->render($button);
+            $this->content->footer = $content;
         }
-        return $this->content;
     }
 }
 
