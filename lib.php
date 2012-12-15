@@ -25,6 +25,7 @@
  */
 defined('MOODLE_INTERNAL') || die();
 require_once($CFG->dirroot . '/user/lib.php');
+require_once($CFG->dirroot . '/mod/forum/lib.php');
 
 class spammerlib {
 
@@ -225,4 +226,78 @@ class spammerlib {
         return $this->user;
     }
 }
-?>
+
+class forum_post_spam
+{
+
+    public $post;
+    public $discussion;
+    public $forum;
+    public $course;
+    public $cm;
+    public $context;
+
+
+    public function __construct($postid) {
+        global $DB;
+
+        // Get various records.
+        if (!$this->post = forum_get_post_full($postid) ) {
+            throw new moodle_exception('invalidpostid', 'forum', $postid);
+        }
+
+        $this->discussion = $DB->get_record('forum_discussions', array('id' => $this->post->discussion), '*', MUST_EXIST);
+        $this->forum = $DB->get_record('forum', array('id' => $this->discussion->forum), '*', MUST_EXIST);
+        $this->course = $DB->get_record('course', array('id' => $this->forum->course), '*', MUST_EXIST);
+        $this->cm = get_coursemodule_from_instance('forum', $this->forum->id, $this->course->id, false, MUST_EXIST);
+        $this->context = context_module::instance($this->cm->id);
+    }
+
+    public function post_html() {
+        return forum_print_post($this->post, $this->discussion, $this->forum, $this->cm, $this->course, false, false, false, '', '', null, true, null, true);
+    }
+
+    private function get_vote_weighting($userid) {
+        global $DB;
+
+        $sql = 'SELECT count(id) FROM {forum_posts} WHERE userid = :userid AND created < :yesterday';
+        $params = array('userid' => $userid, 'yesterday' => (time() - DAYSECS));
+        $postcount = $DB->count_records_sql($sql, $params);
+
+        if ($postcount < 5) {
+            // You need to have posted at least 5 times to have your vote count.
+            return 0;
+        }
+
+        // This is a failsafe, to avoid abuse against established posters.
+        $spammerpostcount = $DB->count_records('forum_posts', array('userid' => $this->post->userid));
+        if ($spammerpostcount > 50) {
+            // We record the spammer vote, but don't allow 'automatic moderation'.
+            return 0;
+        }
+
+        $weighting = 1;
+        // Allow an additional vote weighting for every 50 posts.
+        $weighting+= intval($postcount/50);
+
+        return $weighting;
+    }
+
+    public function register_vote($userid) {
+        global $DB;
+
+        $record = new stdClass();
+        $record->spammerid = $this->post->userid;
+        $record->voterid = $userid;
+        $record->weighting = $this->get_vote_weighting($userid);
+        $record->postid = $this->post->id;
+        $DB->insert_record('block_spam_deletion_votes', $record);
+    }
+
+    public function has_voted($userid) {
+        global $DB;
+
+        $params = array('voterid' => $userid, 'postid' => $this->post->id);
+        return (bool) $DB->count_records('block_spam_deletion_votes', $params);
+    }
+}
