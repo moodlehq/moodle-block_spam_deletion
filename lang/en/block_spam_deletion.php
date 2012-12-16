@@ -36,6 +36,7 @@ $string['counttags'] = 'Tags: {$a}';
 $string['deletebutton'] = 'Delete spammer';
 $string['notrecentlyaccessed'] = 'The first access date of this account is more than 1 month ago and so the content from this user cannot be deleted.';
 $string['pluginname'] = 'Spam deletion';
+$string['reportasspam'] = 'Report as spam';
 $string['reportpostasspam'] = 'Report post as spam';
 $string['spam_deletion:addinstance'] = 'Add delete spammer block';
 $string['spam_deletion:spamdelete'] = 'Delete Spam';
