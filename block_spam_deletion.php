@@ -72,11 +72,24 @@ class block_spam_deletion extends block_base {
      * @return   StdClass    containing the block's content
      */
     function get_content() {
-        global $CFG, $USER, $OUTPUT;
+        global $CFG, $USER, $OUTPUT, $DB;
+
+        $this->content = new stdClass;
 
         if ($this->page->pagetype != 'user-profile') {
-            // Only available on the user profile page.
-            return null;
+            // Display link to spam votes if on non-profile page.
+            if (has_capability('moodle/site:config', $this->context)) {
+                $votecount = $DB->count_records('block_spam_deletion_votes');
+
+                if ($votecount) {
+                    $this->content->text = html_writer::link(
+                        new moodle_url('/blocks/spam_deletion/viewvotes.php'),
+                        get_string('spamreports', 'block_spam_deletion', $votecount));
+                }
+
+            }
+
+            return $this->content;
         }
 
         // Only user with spamdelete capablity should see this block.
@@ -84,7 +97,6 @@ class block_spam_deletion extends block_base {
             return null;
         }
 
-        $this->content = new stdClass;
 
         $params = $this->page->url->params();
         if (!spammerlib::is_suspendable_user($params['id'])) {
