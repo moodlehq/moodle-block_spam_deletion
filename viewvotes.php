@@ -20,6 +20,7 @@ require_once($CFG->libdir .'/tablelib.php');
 
 $PAGE->set_url('/blocks/spam_deletion/viewvotes.php');
 $PAGE->set_context(context_system::instance());
+$PAGE->set_pagelayout('standard');
 $PAGE->set_title('View Votes');
 $PAGE->set_heading('View votes');
 

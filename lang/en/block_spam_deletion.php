@@ -41,6 +41,6 @@ $string['reportpostasspam'] = 'Report post as spam';
 $string['spam_deletion:addinstance'] = 'Add delete spammer block';
 $string['spam_deletion:spamdelete'] = 'Delete Spam';
 $string['spamdescription'] = 'Spammer - spam deleted and account blocked {$a}';
-$string['spamreports'] = 'Spam Reports: {$a}';
+$string['spamreports'] = 'Spam reports: {$a}';
 $string['thanksspamrecorded'] = 'Thanks, your spam report has been recorded.';
 $string['totalcount'] = 'Total records';
