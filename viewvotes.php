@@ -29,6 +29,13 @@ require_capability('block/spam_deletion:viewspamreport', $PAGE->context);
 $table = new spam_report_table('block-spam-deltion-viewspam');
 $table->define_baseurl($PAGE->url);
 
+$deletedtable = new spam_report_post_deleted_table('block-spam-deltion-deleted');
+$deletedtable->define_baseurl($PAGE->url);
+
 echo $OUTPUT->header();
+echo $OUTPUT->heading('Forum post spam reports');
 echo $table->out(50, true);
+
+echo $OUTPUT->heading('Spam reports about forum posts which have been deleted');
+echo $deletedtable->out(50, true);
 echo $OUTPUT->footer();

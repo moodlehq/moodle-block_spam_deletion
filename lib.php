@@ -366,7 +366,7 @@ class spam_report_table extends table_sql
     public function __construct($uniqueid) {
         parent::__construct($uniqueid);
         $this->define_columns(array('postlink', 'message', 'spammer', 'votes', 'votecount', 'actions'));
-        $this->define_headers(array('Forum Post', 'Message', 'Post Author', 'SPAM Score', 'Voters (weighting)', 'Actions'));
+        $this->define_headers(array('Forum Post', 'Message', 'User', 'SPAM Score', 'Voters (weighting)', 'Actions'));
         $this->collapsible(false);
         $this->sortable(false);
     }
@@ -374,6 +374,10 @@ class spam_report_table extends table_sql
     public function query_db($pagesize, $useinitialsbar=true) {
         global $DB;
         $this->rawdata = $DB->get_records_sql($this->query, array(), $this->get_page_start(), $this->get_page_size());
+    }
+
+    public function print_nothing_to_display() {
+        echo 'No spam reports :)';
     }
 
     public function col_postlink($row) {
@@ -408,5 +412,63 @@ class spam_report_table extends table_sql
         global $OUTPUT;
         $notspamurl = new moodle_url('/blocks/spam_deletion/marknotspam.php', array('p' => $row->postid));
         return $OUTPUT->single_button($notspamurl, 'Mark not spam');
+    }
+}
+
+class spam_report_post_deleted_table extends table_sql
+{
+
+    private $query = 'SELECT v.postid, v.spammerid, u.firstname, u.lastname,
+                     SUM(v.weighting) AS votes, COUNT(v.voterid) AS votecount
+                     FROM {block_spam_deletion_votes} v
+                     JOIN {user} u ON u.id = v.spammerid
+                     LEFT OUTER JOIN {forum_posts} f ON f.id = v.postid
+                     WHERE f.id IS NULL
+                     GROUP BY v.spammerid, v.postid, f.subject, f.message, f.discussion, u.firstname, u.lastname
+                     ORDER BY votes DESC, votecount DESC';
+
+    public function __construct($uniqueid) {
+        parent::__construct($uniqueid);
+        $this->define_columns(array('spammer', 'votes', 'votecount', 'actions'));
+        $this->define_headers(array('User', 'SPAM Score', 'Voters (weighting)', 'Actions'));
+        $this->collapsible(false);
+        $this->sortable(false);
+    }
+
+    public function query_db($pagesize, $useinitialsbar=true) {
+        global $DB;
+        $this->rawdata = $DB->get_records_sql($this->query, array(), $this->get_page_start(), $this->get_page_size());
+    }
+
+    public function print_nothing_to_display() {
+        echo 'No spam reports :)';
+    }
+
+    public function col_votecount($row) {
+        global $DB;
+
+        $votersql = 'SELECT u.id, u.firstname, u.lastname, v.weighting
+            FROM {block_spam_deletion_votes} v
+            JOIN {user} u ON u.id = v.voterid
+            WHERE v.postid = ?
+            ORDER BY u.firstname, u.lastname';
+        $rs = $DB->get_recordset_sql($votersql, array($row->postid));
+        $voters = array();
+        foreach ($rs as $v) {
+            $voters[] = fullname($v)." ({$v->weighting})";
+        }
+        $rs->close();
+
+        return implode('<br />', $voters);
+    }
+
+    public function col_spammer($row) {
+        return html_writer::link(new moodle_url('/user/profile.php', array('id' => $row->spammerid)), fullname($row));
+    }
+
+    public function col_actions($row) {
+        global $OUTPUT;
+        $notspamurl = new moodle_url('/blocks/spam_deletion/marknotspam.php', array('p' => $row->postid));
+        return $OUTPUT->single_button($notspamurl, 'Remove spam report');
     }
 }
