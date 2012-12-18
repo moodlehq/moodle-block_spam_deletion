@@ -17,7 +17,6 @@
 require_once('../../config.php');
 require_once($CFG->dirroot . '/blocks/spam_deletion/lib.php');
 
-require_login();
 
 $postid = required_param('postid', PARAM_INT);
 $confirmvote = optional_param('confirmvote', false, PARAM_BOOL);
@@ -33,6 +32,7 @@ $PAGE->set_pagelayout('standard');
 $PAGE->set_title(get_string('reportpostasspam', 'block_spam_deletion'));
 $PAGE->set_heading($lib->course->fullname);
 
+require_login($lib->course, false, $lib->cm);
 require_capability('mod/forum:replypost', $PAGE->context);
 
 $returnurl = new moodle_url('/mod/forum/discuss.php', array('d' => $lib->discussion->id));
