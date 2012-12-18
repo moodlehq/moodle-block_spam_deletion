@@ -16,19 +16,17 @@
 
 require_once('../../config.php');
 require_once($CFG->dirroot . '/blocks/spam_deletion/lib.php');
+require_once($CFG->libdir .'/tablelib.php');
 
-$PAGE->set_url('/blocks/spam_deletion/viewvotes.php');
+$postid = required_param('p', PARAM_INT);
+
+$PAGE->set_url('/blocks/spam_deletion/marknotspam.php');
 $PAGE->set_context(context_system::instance());
-$PAGE->set_pagelayout('standard');
-$PAGE->set_title('View Votes');
-$PAGE->set_heading('View votes');
 
 require_login();
 require_capability('block/spam_deletion:viewspamreport', $PAGE->context);
+require_sesskey();
 
-$table = new spam_report_table('block-spam-deltion-viewspam');
-$table->define_baseurl($PAGE->url);
+$DB->delete_records('block_spam_deletion_votes', array('postid' => $postid));
 
-echo $OUTPUT->header();
-echo $table->out(50, true);
-echo $OUTPUT->footer();
+redirect(new moodle_url('/blocks/spam_deletion/viewvotes.php'));
