@@ -52,8 +52,10 @@ foreach ($rs as $r) {
         $voters[] = fullname($v)." ({$v->weighting})";
     }
 
+    $postlink = new moodle_url('/mod/forum/discuss.php', array('d' => $r->discussion));
+    $postlink->set_anchor('p'.$r->postid);
     $table->data[] = array(
-        html_writer::link(new moodle_url('/mod/forum/discuss.php', array('d' => $r->discussion)), format_text($r->subject)),
+        html_writer::link($postlink, format_text($r->subject)),
         format_text($r->message),
         html_writer::link(new moodle_url('/user/profile.php', array('id' => $r->spammerid)), fullname($r)),
         $r->votes,
