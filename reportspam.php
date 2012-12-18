@@ -37,7 +37,7 @@ require_login($lib->course, false, $lib->cm);
 $returnurl = new moodle_url('/mod/forum/discuss.php', array('d' => $lib->discussion->id));
 
 $coursectx = $PAGE->context->get_course_context();
-if (is_enrolled($coursectx)) {
+if (!is_enrolled($coursectx)) {
     // Use a more helpful message if not enrolled.
     redirect($returnurl, get_string('youneedtoenrol'));
 }
