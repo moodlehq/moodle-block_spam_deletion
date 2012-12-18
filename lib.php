@@ -192,13 +192,21 @@ class spammerlib {
      * 3. Suspend account and set profile description as spammer
      */
     public function set_spammer() {
+        global $DB;
         //Make sure deletion should only happen for recently created account
         if ($this->is_active() && $this->is_recentuser()) {
-            $this->delete_user_comments();
-            $this->delete_user_forum();
-            $this->delete_user_messages();
-            $this->delete_user_tags();
-            $this->set_profile_as_spammer();
+            $transaction = $DB->start_delegated_transaction();
+            try {
+                $this->delete_user_comments();
+                $this->delete_user_forum();
+                $this->delete_user_messages();
+                $this->delete_user_tags();
+                $this->set_profile_as_spammer();
+                $transaction->allow_commit();
+            } catch (Exception $e) {
+                $transaction->rollback($e);
+                throw $e;
+            }
         } else {
             throw new moodle_exception('cannotdelete', 'block_spam_deletion');
         }
