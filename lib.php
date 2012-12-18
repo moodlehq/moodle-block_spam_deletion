@@ -161,12 +161,42 @@ class spammerlib {
      */
     private function delete_user_forum() {
         global $DB;
-        $userid = $this->user->id;
-        $spamstr = get_string('contentremoved', 'block_spam_deletion', date('l jS F g:i A'));
-        $params = array('userid' => $userid,
-            'forumsub' => $spamstr,
-            'forummsg' => $spamstr);
-        $DB->execute('UPDATE {forum_posts} SET subject = :forumsub, message = :forummsg WHERE userid = :userid', $params);
+
+        // Get discussions started by the spammer.
+        $rs = $DB->get_recordset('forum_posts', array('userid' => $this->user->id, 'parent' => 0));
+        foreach ($rs as $post) {
+            // This is really expensive, but it should be rare iterations and i'm lazy right now.
+            $discussion = $DB->get_record('forum_discussions', array('id' => $post->discussion), '*', MUST_EXIST);
+            $forum = $DB->get_record('forum', array('id' => $discussion->forum), '*', MUST_EXIST);
+
+            if ($forum->type == 'single') {
+                // It's too complicated, skip.
+                continue;
+            }
+
+            $course = $DB->get_record('course', array('id' => $forum->course), '*', MUST_EXIST);
+            $cm = get_coursemodule_from_instance('forum', $forum->id, $course->id, false, MUST_EXIST);
+
+            forum_delete_discussion($discussion, false, $course, $cm, $forum);
+        }
+        $rs->close();
+
+        // Delete any remaining posts not discussions..
+        $rs = $DB->get_recordset('forum_posts', array('userid' => $this->user->id));
+        foreach ($rs as $post) {
+            // This is really expensive, but it should be rare iterations and i'm lazy right now.
+            $forum = $DB->get_record('forum', array('id' => $discussion->forum), '*', MUST_EXIST);
+            if ($forum->type == 'single') {
+                // It's too complicated, skip.
+                continue;
+            }
+            $course = $DB->get_record('course', array('id' => $forum->course), '*', MUST_EXIST);
+            $cm = get_coursemodule_from_instance('forum', $forum->id, $course->id, false, MUST_EXIST);
+
+            // Recursively delete post and any children.
+            forum_delete_post($post, true, $course, $cm, $forum);
+        }
+        $rs->close();
     }
 
     /**
