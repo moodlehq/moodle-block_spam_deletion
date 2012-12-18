@@ -75,32 +75,30 @@ class block_spam_deletion extends block_base {
         global $CFG, $USER, $OUTPUT, $DB;
 
         $this->content = new stdClass;
+        if (has_capability('block/spam_deletion:viewspamreport', $this->context)) {
+            // Display link to spam votes if on non-profile page.
+            $votecount = $DB->count_records('block_spam_deletion_votes');
+
+            if ($votecount) {
+                $this->content->text = html_writer::tag('p', html_writer::link(
+                    new moodle_url('/blocks/spam_deletion/viewvotes.php'),
+                    get_string('spamreports', 'block_spam_deletion', $votecount)));
+            }
+        }
 
         if ($this->page->pagetype != 'user-profile') {
-            // Display link to spam votes if on non-profile page.
-            if (has_capability('block/spam_deletion:viewspamreport', $this->context)) {
-                $votecount = $DB->count_records('block_spam_deletion_votes');
-
-                if ($votecount) {
-                    $this->content->text = html_writer::link(
-                        new moodle_url('/blocks/spam_deletion/viewvotes.php'),
-                        get_string('spamreports', 'block_spam_deletion', $votecount));
-                }
-
-            }
-
             return $this->content;
         }
 
         // Only user with spamdelete capablity should see this block.
         if (!has_capability('block/spam_deletion:spamdelete', $this->context)) {
-            return null;
+            return $this->context;
         }
 
 
         $params = $this->page->url->params();
         if (!spammerlib::is_suspendable_user($params['id'])) {
-            $this->content->text = get_string('cannotdelete', 'block_spam_deletion');
+            $this->content->text.= get_string('cannotdelete', 'block_spam_deletion');
             return $this->content;
         }
 
@@ -108,10 +106,10 @@ class block_spam_deletion extends block_base {
 
         if (!$spamlib->is_active()) {
             // If deleted or suspended account, then don't do anything.
-            $this->content->text = get_string('cannotdelete', 'block_spam_deletion');
+            $this->content->text.= get_string('cannotdelete', 'block_spam_deletion');
         } else if (!$spamlib->is_recentuser()) {
             // If user has first access in last one month then only allow spam deletion.
-            $this->content->text = get_string('notrecentlyaccessed', 'block_spam_deletion');
+            $this->content->text.= get_string('notrecentlyaccessed', 'block_spam_deletion');
         } else {
             // Show spammer data count (blog post, messages, forum and comments).
             $this->content->text .= $spamlib->show_data_count();
