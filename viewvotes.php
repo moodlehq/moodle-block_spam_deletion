@@ -25,7 +25,7 @@ $PAGE->set_title('View Votes');
 $PAGE->set_heading('View votes');
 
 require_login();
-require_capability('moodle/site:config', $PAGE->context);
+require_capability('block/spam_deletion:viewspamreport', $PAGE->context);
 
 $sql = 'SELECT v.postid, f.subject, f.message, f.discussion,
         v.spammerid, u.firstname, u.lastname,

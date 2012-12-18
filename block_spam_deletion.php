@@ -78,7 +78,7 @@ class block_spam_deletion extends block_base {
 
         if ($this->page->pagetype != 'user-profile') {
             // Display link to spam votes if on non-profile page.
-            if (has_capability('moodle/site:config', $this->context)) {
+            if (has_capability('block/spam_deletion:viewspamreport', $this->context)) {
                 $votecount = $DB->count_records('block_spam_deletion_votes');
 
                 if ($votecount) {

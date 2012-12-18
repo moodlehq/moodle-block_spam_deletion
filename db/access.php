@@ -34,5 +34,11 @@ $capabilities = array(
         'riskbitmask' => RISK_DATALOSS,
         'captype' => 'write',
         'contextlevel' => CONTEXT_BLOCK,
-    )
+    ),
+
+    'block/spam_deletion:viewspamreport' => array(
+        'riskbitmask' => RISK_PERSONAL,
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_SYSTEM,
+    ),
 );
