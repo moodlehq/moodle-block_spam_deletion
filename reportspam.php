@@ -33,9 +33,17 @@ $PAGE->set_title(get_string('reportpostasspam', 'block_spam_deletion'));
 $PAGE->set_heading($lib->course->fullname);
 
 require_login($lib->course, false, $lib->cm);
-require_capability('mod/forum:replypost', $PAGE->context);
 
 $returnurl = new moodle_url('/mod/forum/discuss.php', array('d' => $lib->discussion->id));
+
+$coursectx = $PAGE->context->get_course_context();
+if (is_enrolled($coursectx)) {
+    // Use a more helpful message if not enrolled.
+    redirect($returnurl, get_string('youneedtoenrol'));
+}
+
+// This is 'abuse' of existing capability.
+require_capability('mod/forum:replypost', $PAGE->context);
 
 if ($lib->has_voted($USER->id)) {
     redirect($returnurl, get_string('alreadyreported', 'block_spam_deletion'));
