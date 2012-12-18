@@ -382,7 +382,7 @@ class spam_report_table extends table_sql
         return html_writer::link($postlink, format_text($row->subject));
     }
 
-    public function col_votercount($row) {
+    public function col_votecount($row) {
         global $DB;
 
         $votersql = 'SELECT u.id, u.firstname, u.lastname, v.weighting
