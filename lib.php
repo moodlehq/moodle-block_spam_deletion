@@ -251,7 +251,8 @@ class spammerlib {
         global $DB;
         $htmlstr = '';
         $params = array('userid' => $this->user->id);
-        $userdata[] = get_string('countmessage', 'block_spam_deletion', (int)$DB->count_records('message', array('useridfrom' => $this->user->id)));
+        $userdata[] = get_string('countmessageunread', 'block_spam_deletion', (int)$DB->count_records('message', array('useridfrom' => $this->user->id)));
+        $userdata[] = get_string('countmessageread', 'block_spam_deletion', (int)$DB->count_records('message_read', array('useridfrom' => $this->user->id)));
         $userdata[] = get_string('countforum', 'block_spam_deletion', (int)$DB->count_records('forum_posts', $params));
         $userdata[] = get_string('countcomment', 'block_spam_deletion', (int)$DB->count_records('comments', $params));
         $userdata[] = get_string('counttags', 'block_spam_deletion', (int)$DB->count_records('tag', $params));
