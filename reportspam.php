@@ -37,9 +37,11 @@ require_login($lib->course, false, $lib->cm);
 $returnurl = new moodle_url('/mod/forum/discuss.php', array('d' => $lib->discussion->id));
 
 $coursectx = $PAGE->context->get_course_context();
-if (!is_enrolled($coursectx)) {
+if (!has_capability('mod/forum:replypost', $PAGE->context)) {
     // Use a more helpful message if not enrolled.
-    redirect($returnurl, get_string('youneedtoenrol'));
+    if (!is_enrolled($coursectx)) {
+        redirect($returnurl, get_string('youneedtoenrol'));
+    }
 }
 
 // This is 'abuse' of existing capability.
