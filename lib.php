@@ -26,6 +26,7 @@
 defined('MOODLE_INTERNAL') || die();
 require_once($CFG->dirroot . '/user/lib.php');
 require_once($CFG->dirroot . '/mod/forum/lib.php');
+require_once($CFG->dirroot.'/tag/lib.php');
 
 class spammerlib {
 
@@ -116,6 +117,7 @@ class spammerlib {
         $updateuser->id = $this->user->id;
         $updateuser->suspended = 1;
         $updateuser->picture = 0;
+        $updateuser->imagealt = '';
         $updateuser->url = '';
         $updateuser->icq = '';
         $updateuser->skype = '';
@@ -126,9 +128,16 @@ class spammerlib {
         $updateuser->phone2 = '';
         $updateuser->department = '';
         $updateuser->institution = '';
-        $updateuser->institution = '';
+        $updateuser->city = '-';
         $updateuser->description = get_string('spamdescription', 'block_spam_deletion', date('l jS F g:i A'));
+
         $DB->update_record('user', $updateuser);
+
+        // Remove custom user profile fields.
+        $DB->delete_records('user_info_data', array('userid' => $this->user->id));
+
+        // Force logout.
+        session_kill_user($this->user->id);
     }
 
     /**
@@ -137,6 +146,12 @@ class spammerlib {
     private function delete_user_messages() {
         global $DB;
         $userid = $this->user->id;
+
+        // Delete message workers..
+        $sql = 'DELETE FROM {message_working}
+            WHERE unreadmessageid IN
+            (SELECT id FROM {message} WHERE useridfrom = ?)';
+        $DB->execute($sql, array($userid));
         $DB->delete_records('message', array('useridfrom' => $userid));
         $DB->delete_records('message_read', array('useridfrom' => $userid));
     }
@@ -179,8 +194,7 @@ class spammerlib {
      * Delete all tags
      */
     private function delete_user_tags() {
-        global $DB;
-        $DB->delete_records('tag', array('userid' =>  $this->user->id));
+        tag_set('user', $this->user->id, array());
     }
 
     /**
