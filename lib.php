@@ -216,6 +216,14 @@ class spammerlib {
     }
 
     /**
+     * Delete any spam reports from this block..
+     */
+    private function delete_spam_votes() {
+        global $DB;
+        $DB->delete_records('block_spam_deletion_votes', array('spammerid' => $this->user->id));
+    }
+
+    /**
      * Delete user records and mark user as spammer, by doing following:
      * 1. Delete comment, message form this user
      * 2. Update forum post and blog post with spam message
@@ -232,6 +240,7 @@ class spammerlib {
                 $this->delete_user_messages();
                 $this->delete_user_tags();
                 $this->set_profile_as_spammer();
+                $this->delete_spam_votes();
                 $transaction->allow_commit();
             } catch (Exception $e) {
                 $transaction->rollback($e);
