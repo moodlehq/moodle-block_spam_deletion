@@ -157,18 +157,6 @@ class spammerlib {
     }
 
     /**
-     * Replace user blogs subject and summary with spam string
-     */
-    private function delete_user_blog() {
-        global $DB;
-        $spamstr = get_string('contentremoved', 'block_spam_deletion', date('l jS F g:i A'));
-        $params = array('userid' => $this->user->id,
-            'blogsub' => $spamstr,
-            'blogsummary' => $spamstr);
-        $DB->execute('UPDATE {post} SET subject = :blogsub, summary = :blogsummary WHERE userid = :userid', $params);
-    }
-
-    /**
      * Replace user forum subject and message with spam string
      */
     private function delete_user_forum() {
@@ -208,7 +196,6 @@ class spammerlib {
         if ($this->is_active() && $this->is_recentuser()) {
             $this->delete_user_comments();
             $this->delete_user_forum();
-            $this->delete_user_blog();
             $this->delete_user_messages();
             $this->delete_user_tags();
             $this->set_profile_as_spammer();
@@ -227,7 +214,6 @@ class spammerlib {
         $htmlstr = '';
         $params = array('userid' => $this->user->id);
         $userdata[] = get_string('countmessage', 'block_spam_deletion', (int)$DB->count_records('message', array('useridfrom' => $this->user->id)));
-        $userdata[] = get_string('countblog', 'block_spam_deletion', (int)$DB->count_records('post', $params));
         $userdata[] = get_string('countforum', 'block_spam_deletion', (int)$DB->count_records('forum_posts', $params));
         $userdata[] = get_string('countcomment', 'block_spam_deletion', (int)$DB->count_records('comments', $params));
         $userdata[] = get_string('counttags', 'block_spam_deletion', (int)$DB->count_records('tag', $params));

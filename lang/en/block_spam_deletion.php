@@ -29,7 +29,6 @@ $string['confirmdelete'] = 'Delete spammer';
 $string['confirmspamreportmsg'] = 'Are you sure you wish to report this post as spam?';
 $string['contentremoved'] = 'Content removed by moderator at {$a}';
 $string['countmessage'] = 'Messages: {$a}';
-$string['countblog'] = 'Blog posts: {$a}';
 $string['countforum'] = 'Forum posts: {$a}';
 $string['countcomment'] = 'Comments: {$a}';
 $string['counttags'] = 'Tags: {$a}';
