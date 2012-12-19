@@ -25,3 +25,21 @@ M.block_spam_deletion.add_to_forum_posts = function(Y) {
         }
     });
 };
+
+// This function adds the 'report as spam' link on every post.
+M.block_spam_deletion.add_to_comments = function(Y) {
+    // Get all the 'command divs' on the page.
+    var commentslist = Y.all('ul.comments-loaded li');
+    commentslist.each(function (li) {
+        if (matches = li.get('id').match(/comment-(\d+)-.*/)) {
+            var commentid = matches[1];
+
+            var commentdiv = li.one('div.comment-message div.text div.no-overflow');
+
+            if (commentdiv) {
+                var url = M.cfg.wwwroot + '/blocks/spam_deletion/reportspam.php?commentid='+commentid;
+                commentdiv.append('<span style="float:right"><a href="' + url + '">' + M.str.block_spam_deletion.reportasspam + '</a></span>');
+            }
+        }
+    });
+};
