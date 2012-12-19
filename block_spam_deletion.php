@@ -81,9 +81,11 @@ class block_spam_deletion extends block_base {
         $this->content = new stdClass;
 
         if ($this->page->pagetype == 'mod-forum-discuss') {
-            // Add the JS to put the 'Report as spam' link.
-            $this->page->requires->strings_for_js(array('reportasspam'), 'block_spam_deletion');
-            $this->page->requires->js_init_call('M.block_spam_deletion.add_to_forum_posts');
+            if (!isguestuser()) {
+                // Add the JS to put the 'Report as spam' link.
+                $this->page->requires->strings_for_js(array('reportasspam'), 'block_spam_deletion');
+                $this->page->requires->js_init_call('M.block_spam_deletion.add_to_forum_posts');
+            }
         }
 
         if (has_capability('block/spam_deletion:viewspamreport', $this->context)) {
