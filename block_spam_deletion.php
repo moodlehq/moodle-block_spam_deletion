@@ -74,6 +74,10 @@ class block_spam_deletion extends block_base {
     function get_content() {
         global $CFG, $USER, $OUTPUT, $DB;
 
+        if ($this->content !== NULL) {
+            return $this->content;
+        }
+
         $this->content = new stdClass;
         if (has_capability('block/spam_deletion:viewspamreport', $this->context)) {
             // Display link to spam votes if on non-profile page.
