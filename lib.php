@@ -398,7 +398,7 @@ class comment_spam extends spam_report
     }
 
     public function has_permission() {
-        return $this->commentlib->can_view();
+        return $this->commentlib->can_post();
     }
 
     public function register_vote($userid) {
