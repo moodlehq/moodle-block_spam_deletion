@@ -20,8 +20,8 @@ require_once($CFG->dirroot . '/blocks/spam_deletion/lib.php');
 $PAGE->set_url('/blocks/spam_deletion/viewvotes.php');
 $PAGE->set_context(context_system::instance());
 $PAGE->set_pagelayout('standard');
-$PAGE->set_title('View Votes');
-$PAGE->set_heading('View votes');
+$PAGE->set_title('Spam reports');
+$PAGE->set_heading('Spam reports');
 
 require_login();
 require_capability('block/spam_deletion:viewspamreport', $PAGE->context);
