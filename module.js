@@ -34,7 +34,10 @@ M.block_spam_deletion.add_to_comments = function(Y) {
         if (matches = li.get('id').match(/comment-(\d+)-.*/)) {
             var commentid = matches[1];
 
-            var commentdiv = li.one('div.comment-message div.text div.no-overflow');
+            // This is a really ugly hack because the comments API allows the
+            // comment template to be override. But this works on the comments block
+            // and plugins db.
+            var commentdiv = li.one('div.no-overflow');
 
             if (commentdiv) {
                 var url = M.cfg.wwwroot + '/blocks/spam_deletion/reportspam.php?commentid='+commentid;
