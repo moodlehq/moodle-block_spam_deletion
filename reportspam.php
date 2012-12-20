@@ -47,11 +47,11 @@ $PAGE->set_title(get_string('reportcontentasspam', 'block_spam_deletion'));
 $PAGE->set_heading($lib->course->fullname);
 
 $returnurl = $lib->return_url();
-$coursectx = $PAGE->context->get_course_context();
+$coursectx = $PAGE->context->get_course_context(false);
 
 if (!$lib->has_permission()) {
     // Use a more helpful message if not enrolled.
-    if (!is_enrolled($coursectx)) {
+    if ($coursectx && !is_enrolled($coursectx)) {
         redirect($returnurl, get_string('youneedtoenrol'));
     }
 
