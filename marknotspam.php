@@ -18,7 +18,8 @@ require_once('../../config.php');
 require_once($CFG->dirroot . '/blocks/spam_deletion/lib.php');
 require_once($CFG->libdir .'/tablelib.php');
 
-$postid = required_param('p', PARAM_INT);
+$postid = optional_param('postid', 0, PARAM_INT);
+$commentid = optional_param('commentid', 0, PARAM_INT);
 
 $PAGE->set_url('/blocks/spam_deletion/marknotspam.php');
 $PAGE->set_context(context_system::instance());
@@ -27,6 +28,13 @@ require_login();
 require_capability('block/spam_deletion:viewspamreport', $PAGE->context);
 require_sesskey();
 
-$DB->delete_records('block_spam_deletion_votes', array('postid' => $postid));
+if ($postid) {
+    $DB->delete_records('block_spam_deletion_votes', array('postid' => $postid));
+} else if ($commentid) {
+    $DB->delete_records('block_spam_deletion_votes', array('commentid' => $commentid));
+} else {
+    print_error('missingparam', 'error', '', 'postid, commentid');
+}
+
 
 redirect(new moodle_url('/blocks/spam_deletion/viewvotes.php'));
