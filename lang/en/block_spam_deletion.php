@@ -27,7 +27,6 @@ $string['cannotdelete'] = 'Cannot delete content for this account';
 $string['confirmdeletemsg'] = 'Are you sure, you want to mark <strong>{$a->firstname} {$a->lastname} ({$a->username})</strong> as spammer? Data belonging to this user will be blanked out or removed.';
 $string['confirmdelete'] = 'Delete spammer';
 $string['confirmspamreportmsg'] = 'Are you sure you wish to report this content as spam?';
-$string['contentremoved'] = 'Content removed by moderator at {$a}';
 $string['countmessageunread'] = 'Unread messages: {$a}';
 $string['countmessageread'] = 'Read messages: {$a}';
 $string['countforum'] = 'Forum posts: {$a}';
