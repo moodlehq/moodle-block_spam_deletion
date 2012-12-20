@@ -49,6 +49,10 @@ $PAGE->set_heading($lib->course->fullname);
 $returnurl = $lib->return_url();
 $coursectx = $PAGE->context->get_course_context(false);
 
+if (isguestuser()) {
+    redirect($returnurl, get_string('youneedtoenrol'));
+}
+
 if (!$lib->has_permission()) {
     // Use a more helpful message if not enrolled.
     if ($coursectx && !is_enrolled($coursectx)) {
