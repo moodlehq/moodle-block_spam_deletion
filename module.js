@@ -3,7 +3,7 @@ M.block_spam_deletion = {};
 // This function adds the 'report as spam' link on every post.
 M.block_spam_deletion.add_to_forum_posts = function(Y) {
     // Get all the 'command divs' on the page.
-    var commanddivs = Y.all('#page-mod-forum-discuss #region-main .forumpost .commands');
+    var commanddivs = Y.all('#page-mod-forum-discuss #region-main div.forumpost div.commands');
     commanddivs.each(function (commanddiv) {
 
         var replyid = 0;
