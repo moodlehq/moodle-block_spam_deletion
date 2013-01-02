@@ -187,7 +187,9 @@ class spammerlib {
         $rs = $DB->get_recordset('forum_posts', array('userid' => $this->user->id));
         foreach ($rs as $post) {
             // This is really expensive, but it should be rare iterations and i'm lazy right now.
+            $discussion = $DB->get_record('forum_discussions', array('id' => $post->discussion), '*', MUST_EXIST);
             $forum = $DB->get_record('forum', array('id' => $discussion->forum), '*', MUST_EXIST);
+
             if ($forum->type == 'single') {
                 // It's too complicated, skip.
                 continue;
