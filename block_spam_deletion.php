@@ -80,7 +80,7 @@ class block_spam_deletion extends block_base {
 
         $this->content = new stdClass;
 
-        if (!isguestuser()) {
+        if (isloggedin() && !isguestuser()) {
 
             if ($this->page->pagetype == 'mod-forum-discuss') {
                 // Add the JS to put the 'Report as spam' link.
