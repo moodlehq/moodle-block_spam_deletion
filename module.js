@@ -31,18 +31,45 @@ M.block_spam_deletion.add_to_comments = function(Y) {
     // Get all the 'command divs' on the page.
     var commentslist = Y.all('ul.comments-loaded li');
     commentslist.each(function (li) {
-        if (matches = li.get('id').match(/comment-(\d+)-.*/)) {
-            var commentid = matches[1];
+        M.block_spam_deletion.add_spamlink_to_comment_li(li);
+    });
 
-            // This is a really ugly hack because the comments API allows the
-            // comment template to be override. But this works on the comments block
-            // and plugins db.
-            var commentdiv = li.one('div.no-overflow');
+    // Add a REALLY UGLY HACK to add to dynmically loaded comments.
+    // http://updates.html5rocks.com/2012/02/Detect-DOM-changes-with-Mutation-Observers
+    var commentlinks = Y.all('a.comment-link');
+    commentlinks.each(function (list) {
+        list.on('click', function(e) {
+            if (matches = list.get('id').match(/comment-link-(.*)/)) {
+                var clientid = matches[1];
+                var container = Y.one('#comment-list-'+clientid);
 
-            if (commentdiv) {
-                var url = M.cfg.wwwroot + '/blocks/spam_deletion/reportspam.php?commentid='+commentid;
-                commentdiv.append('<span style="float:right"><a href="' + url + '">' + M.str.block_spam_deletion.reportasspam + '</a></span>');
+                if (container) {
+                    // YUK YUK YUK! Lets try and add the spam links after a delay to give
+                    // the ajax in other call a chance to load..
+                    setTimeout(function() {
+                        var items = container.all('li');
+                        items.each(function (li) {
+                            M.block_spam_deletion.add_spamlink_to_comment_li(li);
+                        });
+                    }, 1000);
+                }
             }
-        }
+        });
     });
 };
+
+M.block_spam_deletion.add_spamlink_to_comment_li = function (li) {
+    if (matches = li.get('id').match(/comment-(\d+)-.*/)) {
+        var commentid = matches[1];
+
+        // This is a really ugly hack because the comments API allows the
+        // comment template to be override. But this works on the comments block
+        // and plugins db.
+        var commentdiv = li.one('div.no-overflow');
+
+        if (commentdiv) {
+            var url = M.cfg.wwwroot + '/blocks/spam_deletion/reportspam.php?commentid='+commentid;
+            commentdiv.append('<span style="float:right"><a href="' + url + '">' + M.str.block_spam_deletion.reportasspam + '</a></span>');
+        }
+    }
+}
