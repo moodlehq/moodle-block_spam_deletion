@@ -54,6 +54,8 @@ $spamlib = new spammerlib($userid);
 // Process spammer deletion request.
 if ($confirmdelete) {
     $spamlib->set_spammer();
+    $username = fullname($spamlib->get_user());
+    add_to_log(SITEID, 'user', 'delete spammer', '/view.php?id='.$userid, $username);
     redirect($returnurl);
 } else {
     echo $OUTPUT->header();

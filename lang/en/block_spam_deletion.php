@@ -22,12 +22,11 @@
  * @copyright 2012 Rajesh Taneja
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-$string['alreadyreported'] = 'You\'ve already reported this post as spam.';
+$string['alreadyreported'] = 'You\'ve already reported this content as spam.';
 $string['cannotdelete'] = 'Cannot delete content for this account';
 $string['confirmdeletemsg'] = 'Are you sure, you want to mark <strong>{$a->firstname} {$a->lastname} ({$a->username})</strong> as spammer? Data belonging to this user will be blanked out or removed.';
 $string['confirmdelete'] = 'Delete spammer';
-$string['confirmspamreportmsg'] = 'Are you sure you wish to report this post as spam?';
-$string['contentremoved'] = 'Content removed by moderator at {$a}';
+$string['confirmspamreportmsg'] = 'Are you sure you wish to report this content as spam?';
 $string['countmessageunread'] = 'Unread messages: {$a}';
 $string['countmessageread'] = 'Read messages: {$a}';
 $string['countforum'] = 'Forum posts: {$a}';
@@ -37,7 +36,7 @@ $string['deletebutton'] = 'Delete spammer';
 $string['notrecentlyaccessed'] = 'The first access date of this account is more than 1 month ago and so the content from this user cannot be deleted.';
 $string['pluginname'] = 'Spam deletion';
 $string['reportasspam'] = 'Report as spam';
-$string['reportpostasspam'] = 'Report post as spam';
+$string['reportcontentasspam'] = 'Report content as spam';
 $string['spam_deletion:addinstance'] = 'Add delete spammer block';
 $string['spam_deletion:spamdelete'] = 'Delete Spam';
 $string['spam_deletion:viewspamreport'] = 'View spam reports';

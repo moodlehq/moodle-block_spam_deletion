@@ -28,6 +28,7 @@ require_once($CFG->dirroot . '/user/lib.php');
 require_once($CFG->dirroot . '/mod/forum/lib.php');
 require_once($CFG->dirroot.'/tag/lib.php');
 require_once($CFG->libdir .'/tablelib.php');
+require_once($CFG->dirroot . '/comment/lib.php');
 
 class spammerlib {
 
@@ -278,37 +279,20 @@ class spammerlib {
     }
 }
 
-class forum_post_spam
+abstract class spam_report
 {
 
-    public $post;
-    public $discussion;
-    public $forum;
     public $course;
     public $cm;
     public $context;
 
+    abstract public function register_vote($userid);
+    abstract public function has_voted($userid);
+    abstract public function has_permission();
+    abstract public function content_html();
+    abstract public function return_url();
 
-    public function __construct($postid) {
-        global $DB;
-
-        // Get various records.
-        if (!$this->post = forum_get_post_full($postid) ) {
-            throw new moodle_exception('invalidpostid', 'forum', $postid);
-        }
-
-        $this->discussion = $DB->get_record('forum_discussions', array('id' => $this->post->discussion), '*', MUST_EXIST);
-        $this->forum = $DB->get_record('forum', array('id' => $this->discussion->forum), '*', MUST_EXIST);
-        $this->course = $DB->get_record('course', array('id' => $this->forum->course), '*', MUST_EXIST);
-        $this->cm = get_coursemodule_from_instance('forum', $this->forum->id, $this->course->id, false, MUST_EXIST);
-        $this->context = context_module::instance($this->cm->id);
-    }
-
-    public function post_html() {
-        return forum_print_post($this->post, $this->discussion, $this->forum, $this->cm, $this->course, false, false, false, '', '', null, true, null, true);
-    }
-
-    private function get_vote_weighting($userid) {
+    protected function get_vote_weighting($userid) {
         global $DB;
 
         $sql = 'SELECT count(id) FROM {forum_posts} WHERE userid = :userid AND created < :yesterday';
@@ -333,6 +317,37 @@ class forum_post_spam
 
         return $weighting;
     }
+}
+
+class forum_post_spam extends spam_report
+{
+
+    public $post;
+    public $discussion;
+    public $forum;
+
+    public function __construct($postid) {
+        global $DB;
+
+        // Get various records.
+        if (!$this->post = forum_get_post_full($postid) ) {
+            throw new moodle_exception('invalidpostid', 'forum', $postid);
+        }
+
+        $this->discussion = $DB->get_record('forum_discussions', array('id' => $this->post->discussion), '*', MUST_EXIST);
+        $this->forum = $DB->get_record('forum', array('id' => $this->discussion->forum), '*', MUST_EXIST);
+        $this->course = $DB->get_record('course', array('id' => $this->forum->course), '*', MUST_EXIST);
+        $this->cm = get_coursemodule_from_instance('forum', $this->forum->id, $this->course->id, false, MUST_EXIST);
+        $this->context = context_module::instance($this->cm->id);
+    }
+
+    public function return_url() {
+        return new moodle_url('/mod/forum/discuss.php', array('d' => $this->discussion->id));
+    }
+
+    public function has_permission() {
+        return has_capability('mod/forum:replypost', $this->context);
+    }
 
     public function register_vote($userid) {
         global $DB;
@@ -351,9 +366,128 @@ class forum_post_spam
         $params = array('voterid' => $userid, 'postid' => $this->post->id);
         return (bool) $DB->count_records('block_spam_deletion_votes', $params);
     }
+
+    public function content_html() {
+        return forum_print_post($this->post, $this->discussion, $this->forum, $this->cm, $this->course, false, false, false, '', '', null, true, null, true);
+    }
+
+}
+
+class comment_spam extends spam_report
+{
+
+    private $comment;
+    private $commentlib;
+
+    public function __construct($commentid) {
+        global $DB;
+        $this->comment = $DB->get_record('comments', array('id' => $commentid), '*', MUST_EXIST);
+        list($this->context, $this->course, $this->cm) = get_context_info_array($this->comment->contextid);
+
+        $options = new stdClass;
+        $options->context = $this->context;
+        $options->component = self::get_component_from_commentarea($this->comment->commentarea);
+        $options->area = $this->comment->commentarea;
+        $options->itemid = $this->comment->itemid;
+        $options->cm = $this->cm;
+        $options->course = $this->course;
+
+        $this->commentlib = new comment($options);
+    }
+
+    public function return_url() {
+        return $this->context->get_url();
+    }
+
+    public function has_permission() {
+        return $this->commentlib->can_post();
+    }
+
+    public function register_vote($userid) {
+        global $DB;
+
+        $record = new stdClass();
+        $record->spammerid = $this->comment->userid;
+        $record->voterid = $userid;
+        $record->weighting = $this->get_vote_weighting($userid);
+        $record->commentid = $this->comment->id;
+        $DB->insert_record('block_spam_deletion_votes', $record);
+    }
+
+    public function has_voted($userid) {
+        global $DB;
+
+        $params = array('voterid' => $userid, 'commentid' => $this->comment->id);
+        return (bool) $DB->count_records('block_spam_deletion_votes', $params);
+    }
+
+    public function content_html() {
+        global $OUTPUT;
+
+        // This is to get the correctly formated data...
+        $comments = $this->commentlib->get_comments();
+        $commentid = $this->comment->id;
+
+        $filtered = array_filter($comments, function ($var) use ($commentid) {
+            if ($var->id == $commentid) {
+                return $var;
+            }
+        });
+
+        $o = $OUTPUT->box_start('generalbox center');
+        $o.= $this->commentlib->print_comment(array_shift($filtered));
+        $o.= $OUTPUT->box_end();
+
+        return $o;
+    }
+
+    private static function get_component_from_commentarea($commentarea) {
+        $component = null;
+        // TODO: this is an ugly hack because of MDL-37243, we don't store
+        // the component of a comment in the database, so have to 'guess' the component..
+        switch ($commentarea) {
+        case 'plugin_general':
+            $component = 'local_plugins';
+            break;
+        case 'page_comments':
+            $component = 'block_comments';
+            break;
+        case 'database_entry':
+            $component = 'data';
+            break;
+        case 'format_blog':
+            $component = 'blog';
+            break;
+        case 'glossary_entry':
+            $component = 'glossary';
+            break;
+        case 'wiki_page':
+            $component = 'wiki';
+            break;
+        default:
+            throw new moodle_exception('unknowncomponent');
+        }
+
+        return $component;
+    }
+
+
 }
 
 class spam_report_table extends table_sql
+{
+
+    public function col_spammer($row) {
+        return html_writer::link(new moodle_url('/user/profile.php', array('id' => $row->spammerid)), fullname($row));
+    }
+
+    public function print_nothing_to_display() {
+        echo 'No spam reports :)';
+    }
+
+}
+
+class forum_spam_report_table extends spam_report_table
 {
 
     private $query = 'SELECT v.postid, f.subject, f.message, f.discussion,
@@ -362,6 +496,7 @@ class spam_report_table extends table_sql
                      FROM {block_spam_deletion_votes} v
                      JOIN {forum_posts} f ON f.id = v.postid
                      JOIN {user} u ON u.id = v.spammerid
+                     WHERE v.postid IS NOT NULL
                      GROUP BY v.spammerid, v.postid, f.subject, f.message, f.discussion, u.firstname, u.lastname
                      ORDER BY votes DESC, votecount DESC';
 
@@ -378,16 +513,6 @@ class spam_report_table extends table_sql
         $this->rawdata = $DB->get_records_sql($this->query, array(), $this->get_page_start(), $this->get_page_size());
     }
 
-    public function print_nothing_to_display() {
-        echo 'No spam reports :)';
-    }
-
-    public function col_postlink($row) {
-        $postlink = new moodle_url('/mod/forum/discuss.php', array('d' => $row->discussion));
-        $postlink->set_anchor('p'.$row->postid);
-        return html_writer::link($postlink, format_text($row->subject));
-    }
-
     public function col_votecount($row) {
         global $DB;
 
@@ -406,18 +531,20 @@ class spam_report_table extends table_sql
         return implode('<br />', $voters);
     }
 
-    public function col_spammer($row) {
-        return html_writer::link(new moodle_url('/user/profile.php', array('id' => $row->spammerid)), fullname($row));
+    public function col_postlink($row) {
+        $postlink = new moodle_url('/mod/forum/discuss.php', array('d' => $row->discussion));
+        $postlink->set_anchor('p'.$row->postid);
+        return html_writer::link($postlink, format_text($row->subject));
     }
 
     public function col_actions($row) {
         global $OUTPUT;
-        $notspamurl = new moodle_url('/blocks/spam_deletion/marknotspam.php', array('p' => $row->postid));
+        $notspamurl = new moodle_url('/blocks/spam_deletion/marknotspam.php', array('postid' => $row->postid));
         return $OUTPUT->single_button($notspamurl, 'Mark not spam');
     }
 }
 
-class spam_report_post_deleted_table extends table_sql
+class forum_deleted_spam_report_table extends spam_report_table
 {
 
     private $query = 'SELECT v.postid, v.spammerid, u.firstname, u.lastname,
@@ -425,8 +552,8 @@ class spam_report_post_deleted_table extends table_sql
                      FROM {block_spam_deletion_votes} v
                      JOIN {user} u ON u.id = v.spammerid
                      LEFT OUTER JOIN {forum_posts} f ON f.id = v.postid
-                     WHERE f.id IS NULL
-                     GROUP BY v.spammerid, v.postid, f.subject, f.message, f.discussion, u.firstname, u.lastname
+                     WHERE f.id IS NULL AND v.postid IS NOT NULL
+                     GROUP BY v.spammerid, v.postid, u.firstname, u.lastname
                      ORDER BY votes DESC, votecount DESC';
 
     public function __construct($uniqueid) {
@@ -442,10 +569,6 @@ class spam_report_post_deleted_table extends table_sql
         $this->rawdata = $DB->get_records_sql($this->query, array(), $this->get_page_start(), $this->get_page_size());
     }
 
-    public function print_nothing_to_display() {
-        echo 'No spam reports :)';
-    }
-
     public function col_votecount($row) {
         global $DB;
 
@@ -464,13 +587,115 @@ class spam_report_post_deleted_table extends table_sql
         return implode('<br />', $voters);
     }
 
-    public function col_spammer($row) {
-        return html_writer::link(new moodle_url('/user/profile.php', array('id' => $row->spammerid)), fullname($row));
+    public function col_actions($row) {
+        global $OUTPUT;
+        $notspamurl = new moodle_url('/blocks/spam_deletion/marknotspam.php', array('postid' => $row->postid));
+        return $OUTPUT->single_button($notspamurl, 'Remove spam report');
+    }
+}
+
+class comment_spam_report_table extends spam_report_table
+{
+
+    private $query = 'SELECT v.commentid, c.content, v.spammerid, u.firstname, u.lastname, c.contextid,
+                     SUM(v.weighting) AS votes, COUNT(v.voterid) AS votecount
+                     FROM {block_spam_deletion_votes} v
+                     JOIN {comments} c ON c.id = v.commentid
+                     JOIN {user} u ON u.id = v.spammerid
+                     WHERE v.commentid IS NOT NULL
+                     GROUP BY v.commentid, c.content, v.spammerid, u.firstname, u.lastname, c.contextid
+                     ORDER BY votes DESC, votecount DESC';
+
+    public function __construct($uniqueid) {
+        parent::__construct($uniqueid);
+        $this->define_columns(array('postlink', 'content', 'spammer', 'votes', 'votecount', 'actions'));
+        $this->define_headers(array('Comment Location', 'Content', 'User', 'SPAM Score', 'Voters (weighting)', 'Actions'));
+        $this->collapsible(false);
+        $this->sortable(false);
+    }
+
+    public function query_db($pagesize, $useinitialsbar=true) {
+        global $DB;
+        $this->rawdata = $DB->get_records_sql($this->query, array(), $this->get_page_start(), $this->get_page_size());
+    }
+
+    public function col_votecount($row) {
+        global $DB;
+
+        $votersql = 'SELECT u.id, u.firstname, u.lastname, v.weighting
+            FROM {block_spam_deletion_votes} v
+            JOIN {user} u ON u.id = v.voterid
+            WHERE v.commentid = ?
+            ORDER BY u.firstname, u.lastname';
+        $rs = $DB->get_recordset_sql($votersql, array($row->commentid));
+        $voters = array();
+        foreach ($rs as $v) {
+            $voters[] = fullname($v)." ({$v->weighting})";
+        }
+        $rs->close();
+
+        return implode('<br />', $voters);
+    }
+
+    public function col_postlink($row) {
+        $context = context::instance_by_id($row->contextid);
+
+        return html_writer::link($context->get_url(), $context->get_context_name());
     }
 
     public function col_actions($row) {
         global $OUTPUT;
-        $notspamurl = new moodle_url('/blocks/spam_deletion/marknotspam.php', array('p' => $row->postid));
+        $notspamurl = new moodle_url('/blocks/spam_deletion/marknotspam.php', array('commentid' => $row->commentid));
+        return $OUTPUT->single_button($notspamurl, 'Mark not spam');
+    }
+}
+
+class comment_deleted_spam_report_table extends spam_report_table
+{
+
+    private $query = 'SELECT v.commentid, v.spammerid, u.firstname, u.lastname,
+                     SUM(v.weighting) AS votes, COUNT(v.voterid) AS votecount
+                     FROM {block_spam_deletion_votes} v
+                     JOIN {user} u ON u.id = v.spammerid
+                     LEFT OUTER JOIN {comments} f ON f.id = v.commentid
+                     WHERE f.id IS NULL AND v.commentid IS NOT NULL
+                     GROUP BY v.commentid, v.spammerid, u.firstname, u.lastname
+                     ORDER BY votes DESC, votecount DESC';
+
+    public function __construct($uniqueid) {
+        parent::__construct($uniqueid);
+        $this->define_columns(array('spammer', 'votes', 'votecount', 'actions'));
+        $this->define_headers(array('User', 'SPAM Score', 'Voters (weighting)', 'Actions'));
+        $this->collapsible(false);
+        $this->sortable(false);
+    }
+
+    public function col_votecount($row) {
+        global $DB;
+
+        $votersql = 'SELECT u.id, u.firstname, u.lastname, v.weighting
+            FROM {block_spam_deletion_votes} v
+            JOIN {user} u ON u.id = v.voterid
+            WHERE v.commentid = ?
+            ORDER BY u.firstname, u.lastname';
+        $rs = $DB->get_recordset_sql($votersql, array($row->commentid));
+        $voters = array();
+        foreach ($rs as $v) {
+            $voters[] = fullname($v)." ({$v->weighting})";
+        }
+        $rs->close();
+
+        return implode('<br />', $voters);
+    }
+
+    public function query_db($pagesize, $useinitialsbar=true) {
+        global $DB;
+        $this->rawdata = $DB->get_records_sql($this->query, array(), $this->get_page_start(), $this->get_page_size());
+    }
+
+    public function col_actions($row) {
+        global $OUTPUT;
+        $notspamurl = new moodle_url('/blocks/spam_deletion/marknotspam.php', array('commentid' => $row->commentid));
         return $OUTPUT->single_button($notspamurl, 'Remove spam report');
     }
 }

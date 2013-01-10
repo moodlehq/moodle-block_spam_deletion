@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="blocks/spam_deletion/db" VERSION="20121215" COMMENT="XMLDB file for Moodle blocks/spam_deletion"
+<XMLDB PATH="blocks/spam_deletion/db" VERSION="20121220" COMMENT="XMLDB file for Moodle blocks/spam_deletion"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
 >
@@ -9,18 +9,23 @@
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true" NEXT="spammerid"/>
         <FIELD NAME="spammerid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="User id of the spammer" PREVIOUS="id" NEXT="voterid"/>
         <FIELD NAME="voterid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="userid of the voter" PREVIOUS="spammerid" NEXT="postid"/>
-        <FIELD NAME="postid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="id of the forum_post" PREVIOUS="voterid" NEXT="weighting"/>
-        <FIELD NAME="weighting" TYPE="int" LENGTH="4" NOTNULL="true" SEQUENCE="false" COMMENT="The weighting of the vote" PREVIOUS="postid"/>
+        <FIELD NAME="postid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="id of the forum_post" PREVIOUS="voterid" NEXT="commentid"/>
+        <FIELD NAME="commentid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="ID of comment table" PREVIOUS="postid" NEXT="messageid"/>
+        <FIELD NAME="messageid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="message id from the message_read table" PREVIOUS="commentid" NEXT="weighting"/>
+        <FIELD NAME="weighting" TYPE="int" LENGTH="4" NOTNULL="true" SEQUENCE="false" COMMENT="The weighting of the vote" PREVIOUS="messageid"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id" NEXT="spammeriduserid"/>
         <KEY NAME="spammeriduserid" TYPE="foreign" FIELDS="spammerid" REFTABLE="user" REFFIELDS="id" PREVIOUS="primary" NEXT="voteriduser"/>
         <KEY NAME="voteriduser" TYPE="foreign" FIELDS="voterid" REFTABLE="user" REFFIELDS="id" PREVIOUS="spammeriduserid" NEXT="postidforumpost"/>
-        <KEY NAME="postidforumpost" TYPE="foreign" FIELDS="postid" REFTABLE="forum_posts" REFFIELDS="id" PREVIOUS="voteriduser"/>
+        <KEY NAME="postidforumpost" TYPE="foreign" FIELDS="postid" REFTABLE="forum_posts" REFFIELDS="id" PREVIOUS="voteriduser" NEXT="commentid-foreign"/>
+        <KEY NAME="commentid-foreign" TYPE="foreign" FIELDS="commentid" REFTABLE="comments" REFFIELDS="id" COMMENT="commentid foreign key" PREVIOUS="postidforumpost"/>
       </KEYS>
       <INDEXES>
         <INDEX NAME="idx-spammerid-weighting" UNIQUE="false" FIELDS="spammerid, weighting" NEXT="idx-unique-voterid-postid"/>
-        <INDEX NAME="idx-unique-voterid-postid" UNIQUE="true" FIELDS="voterid, postid" PREVIOUS="idx-spammerid-weighting"/>
+        <INDEX NAME="idx-unique-voterid-postid" UNIQUE="true" FIELDS="voterid, postid" PREVIOUS="idx-spammerid-weighting" NEXT="idx-unique-voterid-commentid"/>
+        <INDEX NAME="idx-unique-voterid-commentid" UNIQUE="true" FIELDS="voterid, commentid" COMMENT="Unique for voter and comment" PREVIOUS="idx-unique-voterid-postid" NEXT="idx-unique-voterid-messageid"/>
+        <INDEX NAME="idx-unique-voterid-messageid" UNIQUE="true" FIELDS="voterid, messageid" COMMENT="Unique index for voter-messageid" PREVIOUS="idx-unique-voterid-commentid"/>
       </INDEXES>
     </TABLE>
     <TABLE NAME="block_spam_deletion_posts" COMMENT="Original content of forum posts" PREVIOUS="block_spam_deletion_votes">
