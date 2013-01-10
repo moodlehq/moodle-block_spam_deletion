@@ -33,29 +33,6 @@ M.block_spam_deletion.add_to_comments = function(Y) {
     commentslist.each(function (li) {
         M.block_spam_deletion.add_spamlink_to_comment_li(li);
     });
-
-    // Add a REALLY UGLY HACK to add to dynmically loaded comments.
-    // http://updates.html5rocks.com/2012/02/Detect-DOM-changes-with-Mutation-Observers
-    var commentlinks = Y.all('a.comment-link');
-    commentlinks.each(function (list) {
-        list.on('click', function(e) {
-            if (matches = list.get('id').match(/comment-link-(.*)/)) {
-                var clientid = matches[1];
-                var container = Y.one('#comment-list-'+clientid);
-
-                if (container) {
-                    // YUK YUK YUK! Lets try and add the spam links after a delay to give
-                    // the ajax in other call a chance to load..
-                    setTimeout(function() {
-                        var items = container.all('li');
-                        items.each(function (li) {
-                            M.block_spam_deletion.add_spamlink_to_comment_li(li);
-                        });
-                    }, 1000);
-                }
-            }
-        });
-    });
 };
 
 M.block_spam_deletion.add_spamlink_to_comment_li = function (li) {
