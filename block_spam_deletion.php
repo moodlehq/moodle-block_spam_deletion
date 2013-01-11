@@ -142,7 +142,7 @@ class block_spam_deletion extends block_base {
     function cron() {
         global $DB;
 
-        $regexp = '/<img|fuck|casino|porn|xxx|cialis|viagra|poker|warcraft|ejaculation|pills|pharmaceuticals/i';
+        $regexp = '/<img|fuck|casino|porn|xxx|cialis|viagra|poker|warcraft|ejaculation|pharmaceuticals|locksmith|ugg boots/i';
 
         $rs = $DB->get_recordset_select('user', 'firstaccess > ?', array(time() - DAYSECS));
         $spammers = array();
