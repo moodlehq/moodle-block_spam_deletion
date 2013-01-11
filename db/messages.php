@@ -1,4 +1,5 @@
 <?php
+
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -15,18 +16,21 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Version details
+ * Defines message providers (types of messages being sent) for the plugins plugin.
  *
- * @package    block_spam_deletion
- * @category   spam_deletion
- * @copyright  2012 Rajesh Taneja
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package block_spam_deletion
+ * @copyright  2013 onwards  Dan Poltawski http://moodle.com
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version   = 2013011101;            // The current plugin version (Date: YYYYMMDDXX)
-$plugin->requires  = 2012112900;            // Requires this Moodle version
-$plugin->component = 'block_spam_deletion'; // Full name of the plugin (used for diagnostics)
-$plugin->release   = '0.1';
-$plugin->maturity  = MATURITY_ALPHA;
+$messageproviders = array (
+    // Registration notifications. (for approvers)
+    'spamreport' => array (
+        'capability'  => 'block/spam_deletion:viewspamreport',
+        'defaults' => array(
+            'popup' => MESSAGE_PERMITTED + MESSAGE_DEFAULT_LOGGEDIN,
+            'jabber' => MESSAGE_PERMITTED + MESSAGE_DEFAULT_LOGGEDIN + MESSAGE_DEFAULT_LOGGEDOFF,
+        ),
+    ),
+);

@@ -34,9 +34,13 @@ $string['countcomment'] = 'Comments: {$a}';
 $string['counttags'] = 'Unique tags: {$a}';
 $string['deletebutton'] = 'Delete spammer';
 $string['notrecentlyaccessed'] = 'The first access date of this account is more than 1 month ago and so the content from this user cannot be deleted.';
+$string['messageprovider:spamreport'] = 'Spam report';
 $string['pluginname'] = 'Spam deletion';
 $string['reportasspam'] = 'Report as spam';
 $string['reportcontentasspam'] = 'Report content as spam';
+$string['spamreportmessage'] = '{$a->spammer} may be a spammer.
+View spam reports at {$a->url}';
+$string['spamreportmessagetitle'] = '{$a->spammer} may be a spammer.';
 $string['spam_deletion:addinstance'] = 'Add delete spammer block';
 $string['spam_deletion:spamdelete'] = 'Delete Spam';
 $string['spam_deletion:viewspamreport'] = 'View spam reports';
