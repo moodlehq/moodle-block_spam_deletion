@@ -317,6 +317,36 @@ abstract class spam_report
 
         return $weighting;
     }
+
+    public static function notify_spam($spammerid, $voterid) {
+        global $DB, $CFG;
+
+        $spammer = $DB->get_record('user', array('id' => $spammerid));
+        $voter = $DB->get_record('user', array('id' => $voterid));
+
+        $a = new stdClass;
+        $a->spammer = fullname($spammer);
+        $a->url = $CFG->wwwroot.'/blocks/spam_deletion/viewvotes.php';
+        $message = get_string('spamreportmessage', 'block_spam_deletion', $a);
+        $title = get_string('spamreportmessagetitle', 'block_spam_deletion', $a);
+
+        $eventdata = new stdClass();
+        $eventdata->component         = 'block_spam_deletion';
+        $eventdata->name              = 'spamreport';
+        $eventdata->userfrom          = $voter;
+        $eventdata->subject           = $title;
+        $eventdata->fullmessage       = $message;
+        $eventdata->fullmessageformat = FORMAT_PLAIN;
+        $eventdata->fullmessagehtml   = $message;
+        $eventdata->smallmessage      = $message;
+        $eventdata->notification      = 1;
+
+        $moderators = get_users_by_capability(context_system::instance(), 'block/spam_deletion:viewspamreport');
+        foreach ($moderators as $m) {
+            $eventdata->userto = $m;
+            message_send($eventdata);
+        }
+    }
 }
 
 class forum_post_spam extends spam_report
@@ -358,6 +388,9 @@ class forum_post_spam extends spam_report
         $record->weighting = $this->get_vote_weighting($userid);
         $record->postid = $this->post->id;
         $DB->insert_record('block_spam_deletion_votes', $record);
+
+        // Send message to notifiers.
+        $this->notify_spam($record->spammerid, $record->voterid);
     }
 
     public function has_voted($userid) {
@@ -412,6 +445,9 @@ class comment_spam extends spam_report
         $record->weighting = $this->get_vote_weighting($userid);
         $record->commentid = $this->comment->id;
         $DB->insert_record('block_spam_deletion_votes', $record);
+
+        // Send message to notifiers.
+        $this->notify_spam($record->spammerid, $record->voterid);
     }
 
     public function has_voted($userid) {
