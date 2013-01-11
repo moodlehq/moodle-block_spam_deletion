@@ -20,6 +20,7 @@ require_once($CFG->libdir .'/tablelib.php');
 
 $postid = optional_param('postid', 0, PARAM_INT);
 $commentid = optional_param('commentid', 0, PARAM_INT);
+$spammerid = optional_param('spammerid', 0, PARAM_INT);
 
 $PAGE->set_url('/blocks/spam_deletion/marknotspam.php');
 $PAGE->set_context(context_system::instance());
@@ -32,8 +33,10 @@ if ($postid) {
     $DB->delete_records('block_spam_deletion_votes', array('postid' => $postid));
 } else if ($commentid) {
     $DB->delete_records('block_spam_deletion_votes', array('commentid' => $commentid));
+} else if ($spammerid) {
+    $DB->delete_records('block_spam_deletion_votes', array('spammerid' => $spammerid));
 } else {
-    print_error('missingparam', 'error', '', 'postid, commentid');
+    print_error('missingparam', 'error', '', 'postid, commentid, spammerid');
 }
 
 

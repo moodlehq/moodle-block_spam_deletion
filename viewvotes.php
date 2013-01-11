@@ -50,4 +50,9 @@ $dct = new comment_deleted_spam_report_table('4');
 $dct->define_baseurl($PAGE->url);
 echo $dct->out(50, true);
 
+echo $OUTPUT->heading('User profile spam reports');
+$st = new user_profile_spam_table('5');
+$st->define_baseurl($PAGE->url);
+echo $st->out(50, true);
+
 echo $OUTPUT->footer();

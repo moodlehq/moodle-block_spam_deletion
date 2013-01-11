@@ -735,3 +735,57 @@ class comment_deleted_spam_report_table extends spam_report_table
         return $OUTPUT->single_button($notspamurl, 'Remove spam report');
     }
 }
+
+class user_profile_spam_table extends spam_report_table
+{
+
+    private $query = 'SELECT v.spammerid, u.firstname, u.lastname, u.description,
+                      SUM(v.weighting) AS votes, COUNT(v.voterid) AS votecount
+                     FROM {block_spam_deletion_votes} v
+                     JOIN {user} u ON u.id = v.spammerid
+                     WHERE v.postid IS NULL AND v.commentid IS NULL
+                     GROUP BY v.spammerid, u.firstname, u.lastname, u.description
+                     ORDER BY votes DESC, votecount DESC';
+
+    public function __construct($uniqueid) {
+        parent::__construct($uniqueid);
+        $this->define_columns(array('spammer', 'description', 'votecount', 'actions'));
+        $this->define_headers(array('User', 'Profile description', 'Votes', 'Actions'));
+        $this->collapsible(false);
+        $this->sortable(false);
+    }
+
+    public function col_votecount($row) {
+        global $DB;
+
+        $votersql = 'SELECT v.id, u.id AS userid, u.firstname, u.lastname, v.weighting
+            FROM {block_spam_deletion_votes} v
+            LEFT OUTER JOIN {user} u ON u.id = v.voterid
+            WHERE v.postid IS NULL AND v.commentid IS NULL AND
+            v.spammerid = ?
+            ORDER BY u.firstname, u.lastname';
+        $rs = $DB->get_recordset_sql($votersql, array($row->spammerid));
+        $voters = array();
+        foreach ($rs as $v) {
+            if (empty($v->userid)) {
+                $voters[] = "SYSTEM ({$v->weighting})";
+            } else {
+                $voters[] = fullname($v)." ({$v->weighting})";
+            }
+        }
+        $rs->close();
+
+        return implode('<br />', $voters);
+    }
+
+    public function query_db($pagesize, $useinitialsbar=true) {
+        global $DB;
+        $this->rawdata = $DB->get_records_sql($this->query, array(), $this->get_page_start(), $this->get_page_size());
+    }
+
+    public function col_actions($row) {
+        global $OUTPUT;
+        $notspamurl = new moodle_url('/blocks/spam_deletion/marknotspam.php', array('spammerid' => $row->spammerid));
+        return $OUTPUT->single_button($notspamurl, 'Remove spam report');
+    }
+}

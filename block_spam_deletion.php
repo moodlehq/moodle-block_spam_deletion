@@ -138,5 +138,28 @@ class block_spam_deletion extends block_base {
             $this->content->footer = $content;
         }
     }
+
+    function cron() {
+        global $DB;
+
+        $regexp = '/<img|fuck|casino|porn|xxx|cialis|viagra|poker|warcraft|ejaculation|pills|pharmaceuticals/i';
+
+        $rs = $DB->get_recordset_select('user', 'firstaccess > ?', array(time() - DAYSECS));
+        $spammers = array();
+        foreach ($rs as $u) {
+            if (preg_match($regexp, $u->description)) {
+                $spammers[] = $u;
+            }
+        }
+        $rs->close();
+
+        foreach ($spammers as $spammer) {
+            $record = new stdClass();
+            $record->spammerid = $spammer->id;
+            $record->weighting = 0;
+            $DB->insert_record('block_spam_deletion_votes', $record);
+        }
+        return true;
+    }
 }
 
