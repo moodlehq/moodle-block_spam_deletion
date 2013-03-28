@@ -64,5 +64,5 @@ function block_spam_deletion_detect_post_spam() {
 
     // It sucks a bit that we die() becase the user can't easily edit their post if they are real, but
     // This seems to be the best way to make it clear.
-    throw new moodle_exception('messageblocked', 'block_spam_deletion');
+    throw new moodle_exception('messageblocked', 'block_spam_deletion', '', $postcontent['text']);
 }
