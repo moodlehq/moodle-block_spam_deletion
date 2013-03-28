@@ -35,6 +35,7 @@ $string['counttags'] = 'Unique tags: {$a}';
 $string['deletebutton'] = 'Delete spammer';
 $string['notrecentlyaccessed'] = 'The first access date of this account is more than 1 month ago and so the content from this user cannot be deleted.';
 $string['messageprovider:spamreport'] = 'Spam report';
+$string['messageblocked'] = 'Sorry, your message has been blocked as it has been detected to contain links. As a result of abuse by spammers we do not allow you to post links in your first posts. Please press your browsers back button and edit your post to remove the links.';
 $string['pluginname'] = 'Spam deletion';
 $string['reportasspam'] = 'Report as spam';
 $string['reportcontentasspam'] = 'Report content as spam';
