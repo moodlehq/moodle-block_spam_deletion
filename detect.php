@@ -55,7 +55,7 @@ function block_spam_deletion_detect_post_spam() {
     $params = array('userid' => $USER->id, 'yesterday' => (time() - DAYSECS));
     $postcount = $DB->count_records_sql($sql, $params);
 
-    if ($postcount > 1) {
+    if ($postcount >= 1) {
         // Do nothing, they've got some non-spammy posts.
         return;
     }

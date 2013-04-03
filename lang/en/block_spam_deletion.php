@@ -35,7 +35,7 @@ $string['counttags'] = 'Unique tags: {$a}';
 $string['deletebutton'] = 'Delete spammer';
 $string['notrecentlyaccessed'] = 'The first access date of this account is more than 1 month ago and so the content from this user cannot be deleted.';
 $string['messageprovider:spamreport'] = 'Spam report';
-$string['messageblocked'] = 'Your post has been blocked, as our spam prevention system has flagged it as possibly containing spam. If this is not the case, please see \'My post has been incorrectly flagged as containing spam\' in <a href="http://docs.moodle.org/en/Moodle.org_FAQ">http://docs.moodle.org/en/Moodle.org_FAQ</a>
+$string['messageblocked'] = 'Your post has been blocked, as our spam prevention system has flagged it as possibly containing spam. If this is not the case, please see \'My post has been incorrectly flagged as containing spam\' in <a href="http://docs.moodle.org/en/Moodle.org_FAQ#My_post_has_been_incorrectly_flagged_as_containing_spam">http://docs.moodle.org/en/Moodle.org_FAQ</a>. Your message is below if you need to copy and paste it:
 {$a}';
 $string['pluginname'] = 'Spam deletion';
 $string['reportasspam'] = 'Report as spam';
