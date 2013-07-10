@@ -122,10 +122,16 @@ class block_spam_deletion extends block_base {
         if (!$spamlib->is_active()) {
             // If deleted or suspended account, then don't do anything.
             $this->content->text.= get_string('cannotdelete', 'block_spam_deletion');
-        } else if (!$spamlib->is_recentuser()) {
-            // If user has first access in last one month then only allow spam deletion.
-            $this->content->text.= get_string('notrecentlyaccessed', 'block_spam_deletion');
+
         } else {
+            if (!$spamlib->is_recentuser()) {
+                // Display a warning.
+                $this->content->text .= html_writer::div(
+                    get_string('notrecentlyaccessed', 'block_spam_deletion'),
+                    'notrecentlyaccessed'
+                );
+            }
+
             // Show spammer data count (blog post, messages, forum and comments).
             $this->content->text .= $spamlib->show_data_count();
 
