@@ -25,10 +25,25 @@ defined('MOODLE_INTERNAL') || die();
 
 block_spam_deletion_detect_post_spam();
 
+/**
+ * Check if the given message should be considered as a spam.
+ */
 function block_spam_deletion_message_is_spammy($message) {
-    $regexp = "/(a href|https?)/";
+    global $CFG;
 
-    if (preg_match($regexp, $message)) {
+    // Work with a copy of the passed value (in case we will need it yet later).
+    $text = $message;
+
+    // Firstly, ignore all links to our draftfile.php as those are probably attached media.
+    $urldraftfile = "$CFG->httpswwwroot/draftfile.php";
+    $text = str_ireplace($urldraftfile, '', $text);
+
+    // How many URLs are left now? We do not rely on href="..." or similar HTML
+    // syntax as the spammer can use Markdown or even just plain URLs in the text.
+    $found = preg_match_all("~(http://|https://|ftp://)~i", $text, $matches);
+
+    // A post with three or more URLs is considered spammy for our purposes.
+    if ($found >= 3) {
         return true;
     }
 
