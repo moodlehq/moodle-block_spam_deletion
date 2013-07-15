@@ -50,8 +50,12 @@ function block_spam_deletion_message_is_spammy($message) {
     return false;
 }
 
+/**
+ * Make sure the submitted forum post form does not contain a spam.
+ */
 function block_spam_deletion_detect_post_spam() {
-    global $DB, $USER, $OUTPUT;
+    global $DB, $USER, $OUTPUT, $PAGE, $SITE;
+
     $postform = optional_param('_qf__mod_forum_post_form', 0, PARAM_BOOL);
     if (!$postform) {
         return;
@@ -78,6 +82,18 @@ function block_spam_deletion_detect_post_spam() {
     // OK - looks like a spammer. Lets stop the post from continuining and notify the user.
 
     // It sucks a bit that we die() becase the user can't easily edit their post if they are real, but
-    // This seems to be the best way to make it clear.
-    throw new moodle_exception('messageblocked', 'block_spam_deletion', '', $postcontent['text']);
+    // this seems to be the best way to make it clear.
+
+    $PAGE->set_context(context_system::instance());
+    $PAGE->set_url('/');
+    $PAGE->set_title(get_string('error'));
+    $PAGE->set_heading($SITE->fullname);
+
+    echo $OUTPUT->header();
+    echo $OUTPUT->heading(get_string('messageblockedtitle', 'block_spam_deletion'));
+    echo $OUTPUT->box(get_string('messageblocked', 'block_spam_deletion'));
+    echo $OUTPUT->box(html_writer::tag('pre', s($postcontent['text']), array('class' => 'notifytiny')));
+    echo $OUTPUT->footer();
+
+    die();
 }
