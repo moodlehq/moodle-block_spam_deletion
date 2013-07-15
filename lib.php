@@ -236,7 +236,7 @@ class spammerlib {
     public function set_spammer() {
         global $DB;
         //Make sure deletion should only happen for recently created account
-        if ($this->is_active() && $this->is_recentuser()) {
+        if ($this->is_active()) {
             $transaction = $DB->start_delegated_transaction();
             try {
                 $this->delete_user_comments();

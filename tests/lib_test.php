@@ -59,14 +59,31 @@ class block_spam_deletion_lib_testcase extends advanced_testcase {
     public function test_old_user() {
         $this->resetAfterTest(true);
 
-        // Set lastaccess to 1 year ago..
+        // Set up an old user.
         $firstaccess = time() - YEARSECS;
         $u = $this->getDataGenerator()->create_user(array('firstaccess' => $firstaccess));
         $lib = new spammerlib($u->id);
-
         $this->assertInstanceOf('spammerlib', $lib);
+        $this->assertFalse($lib->is_recentuser());
+        $this->assertTrue($lib->is_active());
+        $lib->set_spammer();
 
-        // Expect exception because can't set an old user as a spammer.
+        // Set up a recent user.
+        $firstaccess = time() - DAYSECS;
+        $u = $this->getDataGenerator()->create_user(array('firstaccess' => $firstaccess));
+        $lib = new spammerlib($u->id);
+        $this->assertInstanceOf('spammerlib', $lib);
+        $this->assertTrue($lib->is_recentuser());
+        $this->assertTrue($lib->is_active());
+        $lib->set_spammer();
+
+        // Set up a suspended user.
+        $firstaccess = time() - YEARSECS;
+        $u = $this->getDataGenerator()->create_user(array('firstaccess' => $firstaccess, 'suspended' => 1));
+        $lib = new spammerlib($u->id);
+        $this->assertInstanceOf('spammerlib', $lib);
+        $this->assertFalse($lib->is_recentuser());
+        $this->assertFalse($lib->is_active());
         $this->setExpectedException('moodle_exception');
         $lib->set_spammer();
     }
