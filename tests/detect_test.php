@@ -56,6 +56,14 @@ class block_spam_deletion_detect_testcase extends basic_testcase {
             and I have a problem with an error - see the screenshot:</p>
             <p><img alt="Screenshot" src="'.$CFG->httpswwwroot.'/draftfile.php/78/user/draft/53620397/shot.png" /></p>'));
 
+        // Links to the site itself are allowed.
+        $this->assertFalse(block_spam_deletion_message_is_spammy(
+            'I have looked at other <a href="discuss.php?d=12345">thread</a> and also the one at
+            <a href="'.$CFG->wwwroot.'/mod/forum/discuss.php?d=54321#p123">another forum</a> that is
+            also mentioned <a href="'.$CFG->httpswwwroot.'/mod/forum/discuss.php?d=98765">here</a>. None
+            of the solution explains why <a title="My site" href="http://my.moodle.si.te/">my site</a>
+            running at http://my.moodle.si.te is vulnerable to this problem.'));
+
         // Just in case the spammer prefers Markdown or plaintext.
         $this->assertTrue(block_spam_deletion_message_is_spammy(
             'Check [my Moodle site][1] and get [courses for free](http://freemoodlecourses.com/land).

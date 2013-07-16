@@ -38,6 +38,10 @@ function block_spam_deletion_message_is_spammy($message) {
     $urldraftfile = "$CFG->httpswwwroot/draftfile.php";
     $text = str_ireplace($urldraftfile, '', $text);
 
+    // Also, ignore all links to our site itself.
+    $text = str_ireplace($CFG->httpswwwroot, '', $text);
+    $text = str_ireplace($CFG->wwwroot, '', $text);
+
     // How many URLs are left now? We do not rely on href="..." or similar HTML
     // syntax as the spammer can use Markdown or even just plain URLs in the text.
     $found = preg_match_all("~(http://|https://|ftp://)~i", $text, $matches);
