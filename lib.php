@@ -305,7 +305,13 @@ abstract class spam_report
         }
 
         // This is a failsafe, to avoid abuse against established posters.
-        $spammerpostcount = $DB->count_records('forum_posts', array('userid' => $this->post->userid));
+        if (isset($this->post)) {
+            $spammerpostcount = $DB->count_records('forum_posts', array('userid' => $this->post->userid));
+        } else if (isset($this->comment)) {
+            $spammerpostcount = $DB->count_records('forum_posts', array('userid' => $this->post->userid));
+        } else {
+            throw new coding_exception('post and comment attributes not defined');
+        }
         if ($spammerpostcount > 50) {
             // We record the spammer vote, but don't allow 'automatic moderation'.
             return 0;
@@ -409,7 +415,7 @@ class forum_post_spam extends spam_report
 class comment_spam extends spam_report
 {
 
-    private $comment;
+    protected $comment;
     private $commentlib;
 
     public function __construct($commentid) {
@@ -527,7 +533,8 @@ class forum_spam_report_table extends spam_report_table
 {
 
     private $query = 'SELECT v.postid, f.subject, f.message, f.discussion,
-                     v.spammerid, u.firstname, u.lastname,
+                     v.spammerid, u.firstname, u.lastname, u.firstnamephonetic,
+                     u.lastnamephonetic, u.middlename, u.alternatename,
                      SUM(v.weighting) AS votes, COUNT(v.voterid) AS votecount
                      FROM {block_spam_deletion_votes} v
                      JOIN {forum_posts} f ON f.id = v.postid
@@ -552,7 +559,8 @@ class forum_spam_report_table extends spam_report_table
     public function col_votecount($row) {
         global $DB;
 
-        $votersql = 'SELECT u.id, u.firstname, u.lastname, v.weighting
+        $votersql = 'SELECT u.id, u.firstname, u.lastname, v.weighting,
+            u.firstnamephonetic,u.lastnamephonetic, u.middlename, u.alternatename
             FROM {block_spam_deletion_votes} v
             JOIN {user} u ON u.id = v.voterid
             WHERE v.postid = ?
@@ -584,6 +592,7 @@ class forum_deleted_spam_report_table extends spam_report_table
 {
 
     private $query = 'SELECT v.postid, v.spammerid, u.firstname, u.lastname,
+                     u.firstnamephonetic, u.lastnamephonetic, u.middlename, u.alternatename,
                      SUM(v.weighting) AS votes, COUNT(v.voterid) AS votecount
                      FROM {block_spam_deletion_votes} v
                      JOIN {user} u ON u.id = v.spammerid
@@ -608,7 +617,8 @@ class forum_deleted_spam_report_table extends spam_report_table
     public function col_votecount($row) {
         global $DB;
 
-        $votersql = 'SELECT u.id, u.firstname, u.lastname, v.weighting
+        $votersql = 'SELECT u.id, u.firstname, u.lastname, v.weighting,
+                     u.firstnamephonetic, u.lastnamephonetic, u.middlename, u.alternatename
             FROM {block_spam_deletion_votes} v
             JOIN {user} u ON u.id = v.voterid
             WHERE v.postid = ?
@@ -634,6 +644,7 @@ class comment_spam_report_table extends spam_report_table
 {
 
     private $query = 'SELECT v.commentid, c.content, v.spammerid, u.firstname, u.lastname, c.contextid,
+                     u.firstnamephonetic, u.lastnamephonetic, u.middlename, u.alternatename,
                      SUM(v.weighting) AS votes, COUNT(v.voterid) AS votecount
                      FROM {block_spam_deletion_votes} v
                      JOIN {comments} c ON c.id = v.commentid
@@ -658,7 +669,8 @@ class comment_spam_report_table extends spam_report_table
     public function col_votecount($row) {
         global $DB;
 
-        $votersql = 'SELECT u.id, u.firstname, u.lastname, v.weighting
+        $votersql = 'SELECT u.id, u.firstname, u.lastname, v.weighting,
+                     u.firstnamephonetic, u.lastnamephonetic, u.middlename, u.alternatename
             FROM {block_spam_deletion_votes} v
             JOIN {user} u ON u.id = v.voterid
             WHERE v.commentid = ?
@@ -690,6 +702,7 @@ class comment_deleted_spam_report_table extends spam_report_table
 {
 
     private $query = 'SELECT v.commentid, v.spammerid, u.firstname, u.lastname,
+                     u.firstnamephonetic, u.lastnamephonetic, u.middlename, u.alternatename,
                      SUM(v.weighting) AS votes, COUNT(v.voterid) AS votecount
                      FROM {block_spam_deletion_votes} v
                      JOIN {user} u ON u.id = v.spammerid
@@ -709,7 +722,8 @@ class comment_deleted_spam_report_table extends spam_report_table
     public function col_votecount($row) {
         global $DB;
 
-        $votersql = 'SELECT u.id, u.firstname, u.lastname, v.weighting
+        $votersql = 'SELECT u.id, u.firstname, u.lastname, v.weighting,
+                     u.firstnamephonetic, u.lastnamephonetic, u.middlename, u.alternatename
             FROM {block_spam_deletion_votes} v
             JOIN {user} u ON u.id = v.voterid
             WHERE v.commentid = ?
@@ -740,6 +754,7 @@ class user_profile_spam_table extends spam_report_table
 {
 
     private $query = 'SELECT v.spammerid, u.firstname, u.lastname, u.description,
+                     u.firstnamephonetic, u.lastnamephonetic, u.middlename, u.alternatename,
                       SUM(v.weighting) AS votes, COUNT(v.voterid) AS votecount
                      FROM {block_spam_deletion_votes} v
                      JOIN {user} u ON u.id = v.spammerid
@@ -758,7 +773,8 @@ class user_profile_spam_table extends spam_report_table
     public function col_votecount($row) {
         global $DB;
 
-        $votersql = 'SELECT v.id, u.id AS userid, u.firstname, u.lastname, v.weighting
+        $votersql = 'SELECT v.id, u.id AS userid, u.firstname, u.lastname, v.weighting,
+                     u.firstnamephonetic, u.lastnamephonetic, u.middlename, u.alternatename
             FROM {block_spam_deletion_votes} v
             LEFT OUTER JOIN {user} u ON u.id = v.voterid
             WHERE v.postid IS NULL AND v.commentid IS NULL AND

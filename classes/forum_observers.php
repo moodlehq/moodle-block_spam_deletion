@@ -22,7 +22,6 @@ class forum_observers {
         if (isloggedin() && !isguestuser()) {
             global $PAGE;
             $PAGE->requires->strings_for_js(array('reportasspam'), 'block_spam_deletion');
-            $PAGE->requires->js_init_call('M.block_spam_deletion.add_to_comments');
             $PAGE->requires->js_init_call('M.block_spam_deletion.add_to_forum_posts');
         }
     }
