@@ -80,24 +80,14 @@ class block_spam_deletion extends block_base {
 
         $this->content = new stdClass;
 
-        if (isloggedin() && !isguestuser()) {
-            $this->page->requires->strings_for_js(array('reportasspam'), 'block_spam_deletion');
-            $this->page->requires->js_init_call('M.block_spam_deletion.add_to_comments');
-
-            if ($this->page->pagetype == 'mod-forum-discuss') {
-                // Add the JS to put the 'Report as spam' link.
-                $this->page->requires->js_init_call('M.block_spam_deletion.add_to_forum_posts');
-            }
-        }
-
         if (has_capability('block/spam_deletion:viewspamreport', $this->context)) {
             // Display link to spam votes if on non-profile page.
-            $votecount = $DB->count_records('block_spam_deletion_votes');
-
-            if ($votecount) {
-                $this->content->text = html_writer::tag('p', html_writer::link(
-                    new moodle_url('/blocks/spam_deletion/viewvotes.php'),
-                    get_string('spamreports', 'block_spam_deletion', $votecount)));
+            try {
+                $votecount = $DB->count_records('block_spam_deletion_votes');
+                $url = new moodle_url('/blocks/spam_deletion/viewvotes.php');
+                $this->content->text = html_writer::link($url, get_string('spamreports', 'block_spam_deletion', $votecount));
+            } catch (Exception $e) {
+                throw $e;
             }
         }
 
@@ -109,7 +99,6 @@ class block_spam_deletion extends block_base {
         if (!has_capability('block/spam_deletion:spamdelete', $this->context)) {
             return $this->context;
         }
-
 
         $params = $this->page->url->params();
         if (!spammerlib::is_suspendable_user($params['id'])) {
@@ -168,4 +157,3 @@ class block_spam_deletion extends block_base {
         return true;
     }
 }
-
