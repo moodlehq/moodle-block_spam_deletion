@@ -26,8 +26,6 @@ $PAGE->set_heading('Spam reports');
 require_login();
 require_capability('block/spam_deletion:viewspamreport', $PAGE->context);
 
-
-
 echo $OUTPUT->header();
 
 echo $OUTPUT->heading('Forum post spam reports');
