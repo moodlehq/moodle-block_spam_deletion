@@ -33,6 +33,7 @@ $string['countforum'] = 'Forum posts: {$a}';
 $string['countcomment'] = 'Comments: {$a}';
 $string['counttags'] = 'Unique tags: {$a}';
 $string['deletebutton'] = 'Delete spammer';
+$string['eventspammerdeleted'] = 'Spammer deleted';
 $string['notrecentlyaccessed'] = 'Beware! The first access date of this account is more than 1 month ago. Make double sure it is really a spammer.';
 $string['messageprovider:spamreport'] = 'Spam report';
 $string['messageblocked'] = 'Your post has been blocked, as our spam prevention system has flagged it as possibly containing spam. If this is not the case, please see \'My post has been incorrectly flagged as containing spam\' in <a href="http://docs.moodle.org/en/Moodle.org_FAQ#My_post_has_been_incorrectly_flagged_as_containing_spam">http://docs.moodle.org/en/Moodle.org_FAQ</a>. Your message is below if you need to copy and paste it.';

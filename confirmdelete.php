@@ -34,7 +34,7 @@ $confirmdelete = optional_param('confirmdelete', 0, PARAM_BOOL);
 $url = new moodle_url('/blocks/spam_deletion/confirmdelete.php');
 $url->param('id', $userid);
 $PAGE->set_url($url);
-$PAGE->set_context(get_system_context());
+$PAGE->set_context(context_system::instance());
 $PAGE->set_title(get_string('confirmdelete', 'block_spam_deletion'));
 $PAGE->set_heading(get_string('confirmdelete', 'block_spam_deletion'));
 
@@ -54,8 +54,20 @@ $spamlib = new spammerlib($userid);
 // Process spammer deletion request.
 if ($confirmdelete) {
     $spamlib->set_spammer();
-    $username = fullname($spamlib->get_user());
-    add_to_log(SITEID, 'user', 'delete spammer', '/view.php?id='.$userid, $username);
+    $user = $spamlib->get_user();
+    $event = \block_spam_deletion\event\spammer_deleted::create(
+            array(
+                'objectid' => $user->id,
+                'relateduserid' => $user->id,
+                'context' => context_system::instance(),
+                'other' => array(
+                    'username' => $user->username,
+                    'email' => $user->email
+                )
+            )
+        );
+    $event->add_record_snapshot('user', $user);
+    $event->trigger();
     redirect($returnurl);
 } else {
     echo $OUTPUT->header();

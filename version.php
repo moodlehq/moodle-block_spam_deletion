@@ -25,9 +25,9 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version   = 2013071700;            // The current plugin version (Date: YYYYMMDDXX)
-$plugin->requires  = 2013051400;            // Requires this Moodle 2.5
+$plugin->version   = 2014102100;            // The current plugin version (Date: YYYYMMDDXX)
+$plugin->requires  = 2014051200;            // Requires this Moodle 2.7
 $plugin->component = 'block_spam_deletion'; // Full name of the plugin (used for diagnostics)
-$plugin->release   = '0.3';
+$plugin->release   = '0.4';
 $plugin->cron      = 86400; // Run cronjob once per day.
 $plugin->maturity  = MATURITY_STABLE;

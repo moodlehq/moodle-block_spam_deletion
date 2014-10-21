@@ -79,6 +79,7 @@ class block_spam_deletion extends block_base {
         }
 
         $this->content = new stdClass;
+        $this->content->text = '';
 
         if (isloggedin() && !isguestuser()) {
             $this->page->requires->strings_for_js(array('reportasspam'), 'block_spam_deletion');

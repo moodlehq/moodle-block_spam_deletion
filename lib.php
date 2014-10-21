@@ -139,7 +139,7 @@ class spammerlib {
         $DB->delete_records('user_info_data', array('userid' => $this->user->id));
 
         // Force logout.
-        session_kill_user($this->user->id);
+        \core\session\manager::kill_user_sessions($this->user->id);
     }
 
     /**
@@ -526,18 +526,19 @@ class spam_report_table extends table_sql
 class forum_spam_report_table extends spam_report_table
 {
 
-    private $query = 'SELECT v.postid, f.subject, f.message, f.discussion,
-                     v.spammerid, u.firstname, u.lastname,
-                     SUM(v.weighting) AS votes, COUNT(v.voterid) AS votecount
-                     FROM {block_spam_deletion_votes} v
-                     JOIN {forum_posts} f ON f.id = v.postid
-                     JOIN {user} u ON u.id = v.spammerid
-                     WHERE v.postid IS NOT NULL
-                     GROUP BY v.spammerid, v.postid, f.subject, f.message, f.discussion, u.firstname, u.lastname
-                     ORDER BY votes DESC, votecount DESC';
-
+    private $query = '';
     public function __construct($uniqueid) {
         parent::__construct($uniqueid);
+        $namefields = get_all_user_name_fields(true, 'u');
+        $this->query = "SELECT v.postid, f.subject, f.message, f.discussion, v.spammerid,
+            SUM(v.weighting) AS votes, COUNT(v.voterid) AS votecount, $namefields
+            FROM {block_spam_deletion_votes} v
+            JOIN {forum_posts} f ON f.id = v.postid
+            JOIN {user} u ON u.id = v.spammerid
+            WHERE v.postid IS NOT NULL
+            GROUP BY v.spammerid, v.postid, f.subject, f.message, f.discussion, $namefields
+            ORDER BY votes DESC, votecount DESC;";
+
         $this->define_columns(array('postlink', 'message', 'spammer', 'votes', 'votecount', 'actions'));
         $this->define_headers(array('Forum Post', 'Message', 'User', 'SPAM Score', 'Voters (weighting)', 'Actions'));
         $this->collapsible(false);
@@ -552,11 +553,12 @@ class forum_spam_report_table extends spam_report_table
     public function col_votecount($row) {
         global $DB;
 
-        $votersql = 'SELECT u.id, u.firstname, u.lastname, v.weighting
+        $namefields = get_all_user_name_fields(true, 'u');
+        $votersql = "SELECT u.id, v.weighting, $namefields
             FROM {block_spam_deletion_votes} v
             JOIN {user} u ON u.id = v.voterid
             WHERE v.postid = ?
-            ORDER BY u.firstname, u.lastname';
+            ORDER BY $namefields";
         $rs = $DB->get_recordset_sql($votersql, array($row->postid));
         $voters = array();
         foreach ($rs as $v) {
@@ -583,17 +585,17 @@ class forum_spam_report_table extends spam_report_table
 class forum_deleted_spam_report_table extends spam_report_table
 {
 
-    private $query = 'SELECT v.postid, v.spammerid, u.firstname, u.lastname,
-                     SUM(v.weighting) AS votes, COUNT(v.voterid) AS votecount
+    public function __construct($uniqueid) {
+        parent::__construct($uniqueid);
+        $namefields = get_all_user_name_fields(true, 'u');
+        $this->query = "SELECT v.postid, v.spammerid, SUM(v.weighting) AS votes,
+                     COUNT(v.voterid) AS votecount, $namefields
                      FROM {block_spam_deletion_votes} v
                      JOIN {user} u ON u.id = v.spammerid
                      LEFT OUTER JOIN {forum_posts} f ON f.id = v.postid
                      WHERE f.id IS NULL AND v.postid IS NOT NULL
-                     GROUP BY v.spammerid, v.postid, u.firstname, u.lastname
-                     ORDER BY votes DESC, votecount DESC';
-
-    public function __construct($uniqueid) {
-        parent::__construct($uniqueid);
+                     GROUP BY v.spammerid, v.postid, $namefields
+                     ORDER BY votes DESC, votecount DESC";
         $this->define_columns(array('spammer', 'votes', 'votecount', 'actions'));
         $this->define_headers(array('User', 'SPAM Score', 'Voters (weighting)', 'Actions'));
         $this->collapsible(false);
@@ -608,11 +610,12 @@ class forum_deleted_spam_report_table extends spam_report_table
     public function col_votecount($row) {
         global $DB;
 
-        $votersql = 'SELECT u.id, u.firstname, u.lastname, v.weighting
+        $namefields = get_all_user_name_fields(true, 'u');
+        $votersql = "SELECT u.id, v.weighting, $namefields
             FROM {block_spam_deletion_votes} v
             JOIN {user} u ON u.id = v.voterid
             WHERE v.postid = ?
-            ORDER BY u.firstname, u.lastname';
+            ORDER BY $namefields";
         $rs = $DB->get_recordset_sql($votersql, array($row->postid));
         $voters = array();
         foreach ($rs as $v) {
@@ -633,17 +636,20 @@ class forum_deleted_spam_report_table extends spam_report_table
 class comment_spam_report_table extends spam_report_table
 {
 
-    private $query = 'SELECT v.commentid, c.content, v.spammerid, u.firstname, u.lastname, c.contextid,
-                     SUM(v.weighting) AS votes, COUNT(v.voterid) AS votecount
-                     FROM {block_spam_deletion_votes} v
-                     JOIN {comments} c ON c.id = v.commentid
-                     JOIN {user} u ON u.id = v.spammerid
-                     WHERE v.commentid IS NOT NULL
-                     GROUP BY v.commentid, c.content, v.spammerid, u.firstname, u.lastname, c.contextid
-                     ORDER BY votes DESC, votecount DESC';
-
     public function __construct($uniqueid) {
         parent::__construct($uniqueid);
+
+        $namefields = get_all_user_name_fields(true, 'u');
+        $this->query = "SELECT v.commentid, c.content, v.spammerid, c.contextid,
+            SUM(v.weighting) AS votes, COUNT(v.voterid) AS votecount,
+            $namefields
+            FROM {block_spam_deletion_votes} v
+            JOIN {comments} c ON c.id = v.commentid
+            JOIN {user} u ON u.id = v.spammerid
+            WHERE v.commentid IS NOT NULL
+            GROUP BY v.commentid, c.content, v.spammerid, c.contextid, $namefields
+            ORDER BY votes DESC, votecount DESC";
+
         $this->define_columns(array('postlink', 'content', 'spammer', 'votes', 'votecount', 'actions'));
         $this->define_headers(array('Comment Location', 'Content', 'User', 'SPAM Score', 'Voters (weighting)', 'Actions'));
         $this->collapsible(false);
@@ -658,11 +664,12 @@ class comment_spam_report_table extends spam_report_table
     public function col_votecount($row) {
         global $DB;
 
-        $votersql = 'SELECT u.id, u.firstname, u.lastname, v.weighting
+        $namefields = get_all_user_name_fields(true, 'u');
+        $votersql = "SELECT u.id, v.weighting, $namefields
             FROM {block_spam_deletion_votes} v
             JOIN {user} u ON u.id = v.voterid
             WHERE v.commentid = ?
-            ORDER BY u.firstname, u.lastname';
+            ORDER BY $namefields";
         $rs = $DB->get_recordset_sql($votersql, array($row->commentid));
         $voters = array();
         foreach ($rs as $v) {
@@ -688,18 +695,18 @@ class comment_spam_report_table extends spam_report_table
 
 class comment_deleted_spam_report_table extends spam_report_table
 {
-
-    private $query = 'SELECT v.commentid, v.spammerid, u.firstname, u.lastname,
-                     SUM(v.weighting) AS votes, COUNT(v.voterid) AS votecount
-                     FROM {block_spam_deletion_votes} v
-                     JOIN {user} u ON u.id = v.spammerid
-                     LEFT OUTER JOIN {comments} f ON f.id = v.commentid
-                     WHERE f.id IS NULL AND v.commentid IS NOT NULL
-                     GROUP BY v.commentid, v.spammerid, u.firstname, u.lastname
-                     ORDER BY votes DESC, votecount DESC';
-
     public function __construct($uniqueid) {
         parent::__construct($uniqueid);
+        $namefields = get_all_user_name_fields(true, 'u');
+        $this->query = "SELECT v.commentid, v.spammerid,
+            SUM(v.weighting) AS votes, COUNT(v.voterid) AS votecount,
+            $namefields
+            FROM {block_spam_deletion_votes} v
+            JOIN {user} u ON u.id = v.spammerid
+            LEFT OUTER JOIN {comments} f ON f.id = v.commentid
+            WHERE f.id IS NULL AND v.commentid IS NOT NULL
+            GROUP BY v.commentid, v.spammerid, $namefields
+            ORDER BY votes DESC, votecount DESC";
         $this->define_columns(array('spammer', 'votes', 'votecount', 'actions'));
         $this->define_headers(array('User', 'SPAM Score', 'Voters (weighting)', 'Actions'));
         $this->collapsible(false);
@@ -709,11 +716,12 @@ class comment_deleted_spam_report_table extends spam_report_table
     public function col_votecount($row) {
         global $DB;
 
-        $votersql = 'SELECT u.id, u.firstname, u.lastname, v.weighting
+        $namefields = get_all_user_name_fields(true, 'u');
+        $votersql = "SELECT u.id, v.weighting, $namefields
             FROM {block_spam_deletion_votes} v
             JOIN {user} u ON u.id = v.voterid
             WHERE v.commentid = ?
-            ORDER BY u.firstname, u.lastname';
+            ORDER BY $namefields";
         $rs = $DB->get_recordset_sql($votersql, array($row->commentid));
         $voters = array();
         foreach ($rs as $v) {
@@ -739,16 +747,18 @@ class comment_deleted_spam_report_table extends spam_report_table
 class user_profile_spam_table extends spam_report_table
 {
 
-    private $query = 'SELECT v.spammerid, u.firstname, u.lastname, u.description,
-                      SUM(v.weighting) AS votes, COUNT(v.voterid) AS votecount
-                     FROM {block_spam_deletion_votes} v
-                     JOIN {user} u ON u.id = v.spammerid
-                     WHERE v.postid IS NULL AND v.commentid IS NULL
-                     GROUP BY v.spammerid, u.firstname, u.lastname, u.description
-                     ORDER BY votes DESC, votecount DESC';
-
     public function __construct($uniqueid) {
         parent::__construct($uniqueid);
+        $namefields = get_all_user_name_fields(true, 'u');
+        $this->query = "SELECT v.spammerid, u.description, SUM(v.weighting) AS votes,
+            COUNT(v.voterid) AS votecount, $namefields
+            FROM {block_spam_deletion_votes} v
+            JOIN {user} u ON u.id = v.spammerid
+            WHERE v.postid IS NULL AND v.commentid IS NULL
+            GROUP BY v.spammerid, u.description, $namefields
+            ORDER BY votes DESC, votecount DESC";
+
+
         $this->define_columns(array('spammer', 'description', 'votecount', 'actions'));
         $this->define_headers(array('User', 'Profile description', 'Votes', 'Actions'));
         $this->collapsible(false);
@@ -758,12 +768,14 @@ class user_profile_spam_table extends spam_report_table
     public function col_votecount($row) {
         global $DB;
 
-        $votersql = 'SELECT v.id, u.id AS userid, u.firstname, u.lastname, v.weighting
+        $namefields = get_all_user_name_fields(true, 'u');
+
+        $votersql = "SELECT v.id, u.id AS userid, v.weighting, $namefields
             FROM {block_spam_deletion_votes} v
             LEFT OUTER JOIN {user} u ON u.id = v.voterid
             WHERE v.postid IS NULL AND v.commentid IS NULL AND
             v.spammerid = ?
-            ORDER BY u.firstname, u.lastname';
+            ORDER BY $namefields";
         $rs = $DB->get_recordset_sql($votersql, array($row->spammerid));
         $voters = array();
         foreach ($rs as $v) {
