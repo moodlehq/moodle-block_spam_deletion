@@ -401,7 +401,11 @@ class forum_post_spam extends spam_report
     }
 
     public function content_html() {
-        return forum_print_post($this->post, $this->discussion, $this->forum, $this->cm, $this->course, false, false, false, '', '', null, true, null, true);
+        // Wrap te post in a div with the appropriate class so forum post CSS works.
+        $s = html_writer::start_tag('div', array('class' => 'path-mod-forum'));
+        $s .= forum_print_post($this->post, $this->discussion, $this->forum, $this->cm, $this->course, false, false, false, '', '', null, true, null, true);
+        $s .= html_writer::end_tag('div');
+        return $s;
     }
 
 }
