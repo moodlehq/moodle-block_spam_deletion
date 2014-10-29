@@ -58,6 +58,13 @@ class block_spam_deletion extends block_base {
     }
 
     /**
+     * There are settings in settings.php
+     */
+    function has_config() {
+        return true;
+    }
+
+    /**
      * Defines on which pages, block can be visible.
      *
      * @return array

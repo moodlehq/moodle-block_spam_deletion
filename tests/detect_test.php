@@ -73,5 +73,14 @@ class block_spam_deletion_detect_testcase extends basic_testcase {
             [1]: http://viagra.com
             [2]: http://freemoodlecourses.com/logo.jpg
             -->'));
+
+        // Check for spam words.
+        $this->assertTrue(block_spam_deletion_message_is_spammy('<p>buy cheap viagra online</p>'));
+        // Check case insensitivity.
+        $this->assertTrue(block_spam_deletion_message_is_spammy('<p>buy cheap vIaGra online</p>'));
+        // Check only whole words match.
+        $this->assertTrue(block_spam_deletion_message_is_spammy('<p>watch it live!</p>'));
+        $this->assertFalse(block_spam_deletion_message_is_spammy('<p>its alive!</p>'));
+        $this->assertFalse(block_spam_deletion_message_is_spammy('<p>its lively!</p>'));
     }
 }
