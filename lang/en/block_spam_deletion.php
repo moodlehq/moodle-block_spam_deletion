@@ -23,6 +23,9 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 $string['alreadyreported'] = 'You\'ve already reported this content as spam.';
+$string['badwords'] = 'diet,viagra,football,soccer,live,match';
+$string['badwordslist'] = 'Custom spam words list';
+$string['badwordslistdesc'] = 'A comma separated list of words to use to identify spam.';
 $string['cannotdelete'] = 'Cannot delete content for this suspended account.';
 $string['confirmdeletemsg'] = 'Are you sure, you want to mark <strong>{$a->firstname} {$a->lastname} ({$a->username})</strong> as spammer? Data belonging to this user will be blanked out or removed.';
 $string['confirmdelete'] = 'Delete spammer';
