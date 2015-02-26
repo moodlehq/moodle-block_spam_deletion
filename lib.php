@@ -506,6 +506,9 @@ class comment_spam extends spam_report
         case 'wiki_page':
             $component = 'wiki';
             break;
+        case 'amos_contribution':
+            $component = 'local_amos';
+            break;
         default:
             throw new moodle_exception('unknowncomponent', 'block_spam_deletion', '', $commentarea);
         }
