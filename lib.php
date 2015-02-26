@@ -421,6 +421,10 @@ class comment_spam extends spam_report
         $this->comment = $DB->get_record('comments', array('id' => $commentid), '*', MUST_EXIST);
         list($this->context, $this->course, $this->cm) = get_context_info_array($this->comment->contextid);
 
+        if (empty($this->course) and $this->context->id == SYSCONTEXTID) {
+            $this->course = get_site();
+        }
+
         $options = new stdClass;
         $options->context = $this->context;
         $options->component = self::get_component_from_commentarea($this->comment->commentarea);
