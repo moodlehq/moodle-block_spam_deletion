@@ -557,7 +557,7 @@ class forum_spam_report_table extends spam_report_table
         $rs = $DB->get_recordset_sql($votersql, array($row->postid));
         $voters = array();
         foreach ($rs as $v) {
-            $voters[] = fullname($v)." ({$v->weighting})";
+            $voters[] = html_writer::link(new moodle_url('/user/profile.php', array('id' => $v->id)), fullname($v))." ({$v->weighting})";
         }
         $rs->close();
 
@@ -614,7 +614,7 @@ class forum_deleted_spam_report_table extends spam_report_table
         $rs = $DB->get_recordset_sql($votersql, array($row->postid));
         $voters = array();
         foreach ($rs as $v) {
-            $voters[] = fullname($v)." ({$v->weighting})";
+            $voters[] = html_writer::link(new moodle_url('/user/profile.php', array('id' => $v->id)), fullname($v))." ({$v->weighting})";
         }
         $rs->close();
 
@@ -668,7 +668,7 @@ class comment_spam_report_table extends spam_report_table
         $rs = $DB->get_recordset_sql($votersql, array($row->commentid));
         $voters = array();
         foreach ($rs as $v) {
-            $voters[] = fullname($v)." ({$v->weighting})";
+            $voters[] = html_writer::link(new moodle_url('/user/profile.php', array('id' => $v->id)), fullname($v))." ({$v->weighting})";
         }
         $rs->close();
 
@@ -720,7 +720,7 @@ class comment_deleted_spam_report_table extends spam_report_table
         $rs = $DB->get_recordset_sql($votersql, array($row->commentid));
         $voters = array();
         foreach ($rs as $v) {
-            $voters[] = fullname($v)." ({$v->weighting})";
+            $voters[] = html_writer::link(new moodle_url('/user/profile.php', array('id' => $v->id)), fullname($v))." ({$v->weighting})";
         }
         $rs->close();
 
@@ -777,7 +777,7 @@ class user_profile_spam_table extends spam_report_table
             if (empty($v->userid)) {
                 $voters[] = "SYSTEM ({$v->weighting})";
             } else {
-                $voters[] = fullname($v)." ({$v->weighting})";
+                $voters[] = html_writer::link(new moodle_url('/user/profile.php', array('id' => $v->id)), fullname($v))." ({$v->weighting})";
             }
         }
         $rs->close();
