@@ -293,29 +293,11 @@ abstract class spam_report
     abstract public function return_url();
 
     protected function get_vote_weighting($userid) {
-        global $DB;
-
-        $sql = 'SELECT count(id) FROM {forum_posts} WHERE userid = :userid AND created < :yesterday';
-        $params = array('userid' => $userid, 'yesterday' => (time() - DAYSECS));
-        $postcount = $DB->count_records_sql($sql, $params);
-
-        if ($postcount < 5) {
-            // You need to have posted at least 5 times to have your vote count.
-            return 0;
-        }
-
-        // This is a failsafe, to avoid abuse against established posters.
-        $spammerpostcount = $DB->count_records('forum_posts', array('userid' => $this->post->userid));
-        if ($spammerpostcount > 50) {
-            // We record the spammer vote, but don't allow 'automatic moderation'.
-            return 0;
-        }
-
-        $weighting = 1;
-        // Allow an additional vote weighting for every 50 posts.
-        $weighting+= intval($postcount/50);
-
-        return $weighting;
+        // TODO: No yet implemented, will be looked at if we ever decide to
+        // take automatic action based on the weights. A possible metric might
+        // be the number of positive spam reports by the user in the past, or
+        // so.
+        return 1;
     }
 
     public static function notify_spam($spammerid, $voterid) {
