@@ -25,7 +25,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version   = 2014102100;            // The current plugin version (Date: YYYYMMDDXX)
+$plugin->version   = 2014102102;            // The current plugin version (Date: YYYYMMDDXX)
 $plugin->requires  = 2014051200;            // Requires this Moodle 2.7
 $plugin->component = 'block_spam_deletion'; // Full name of the plugin (used for diagnostics)
 $plugin->release   = '0.4';

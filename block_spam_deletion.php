@@ -70,7 +70,7 @@ class block_spam_deletion extends block_base {
      * @return array
      */
     function applicable_formats() {
-        return array('site-index' => true, 'user-profile' => true);
+        return array('site-index' => true, 'user-profile' => true, 'my' => false);
     }
 
     /**
