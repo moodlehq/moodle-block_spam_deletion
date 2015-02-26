@@ -484,7 +484,9 @@ class comment_spam extends spam_report
     private static function get_component_from_commentarea($commentarea) {
         $component = null;
         // TODO: this is an ugly hack because of MDL-37243, we don't store
-        // the component of a comment in the database, so have to 'guess' the component..
+        // the component of a comment in the database, so have to 'guess' the component.
+        // Note that MDL-27548 has been fixed for 2.9 so we will want to
+        // address that in a future version of this block.
         switch ($commentarea) {
         case 'plugin_general':
             $component = 'local_plugins';
@@ -505,7 +507,7 @@ class comment_spam extends spam_report
             $component = 'wiki';
             break;
         default:
-            throw new moodle_exception('unknowncomponent');
+            throw new moodle_exception('unknowncomponent', 'block_spam_deletion', '', $commentarea);
         }
 
         return $component;

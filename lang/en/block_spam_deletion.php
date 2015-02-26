@@ -54,3 +54,4 @@ $string['spamdescription'] = 'Spammer - spam deleted and account blocked {$a}';
 $string['spamreports'] = 'Spam reports: {$a}';
 $string['thanksspamrecorded'] = 'Thanks, your spam report has been recorded.';
 $string['totalcount'] = 'Total records';
+$string['unknowncomponent'] = 'Unsupported comment component: {$a}';
