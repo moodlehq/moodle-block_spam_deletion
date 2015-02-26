@@ -293,29 +293,11 @@ abstract class spam_report
     abstract public function return_url();
 
     protected function get_vote_weighting($userid) {
-        global $DB;
-
-        $sql = 'SELECT count(id) FROM {forum_posts} WHERE userid = :userid AND created < :yesterday';
-        $params = array('userid' => $userid, 'yesterday' => (time() - DAYSECS));
-        $postcount = $DB->count_records_sql($sql, $params);
-
-        if ($postcount < 5) {
-            // You need to have posted at least 5 times to have your vote count.
-            return 0;
-        }
-
-        // This is a failsafe, to avoid abuse against established posters.
-        $spammerpostcount = $DB->count_records('forum_posts', array('userid' => $this->post->userid));
-        if ($spammerpostcount > 50) {
-            // We record the spammer vote, but don't allow 'automatic moderation'.
-            return 0;
-        }
-
-        $weighting = 1;
-        // Allow an additional vote weighting for every 50 posts.
-        $weighting+= intval($postcount/50);
-
-        return $weighting;
+        // TODO: No yet implemented, will be looked at if we ever decide to
+        // take automatic action based on the weights. A possible metric might
+        // be the number of positive spam reports by the user in the past, or
+        // so.
+        return 1;
     }
 
     public static function notify_spam($spammerid, $voterid) {
@@ -421,6 +403,10 @@ class comment_spam extends spam_report
         $this->comment = $DB->get_record('comments', array('id' => $commentid), '*', MUST_EXIST);
         list($this->context, $this->course, $this->cm) = get_context_info_array($this->comment->contextid);
 
+        if (empty($this->course) and $this->context->id == SYSCONTEXTID) {
+            $this->course = get_site();
+        }
+
         $options = new stdClass;
         $options->context = $this->context;
         $options->component = self::get_component_from_commentarea($this->comment->commentarea);
@@ -484,7 +470,9 @@ class comment_spam extends spam_report
     private static function get_component_from_commentarea($commentarea) {
         $component = null;
         // TODO: this is an ugly hack because of MDL-37243, we don't store
-        // the component of a comment in the database, so have to 'guess' the component..
+        // the component of a comment in the database, so have to 'guess' the component.
+        // Note that MDL-27548 has been fixed for 2.9 so we will want to
+        // address that in a future version of this block.
         switch ($commentarea) {
         case 'plugin_general':
             $component = 'local_plugins';
@@ -504,8 +492,11 @@ class comment_spam extends spam_report
         case 'wiki_page':
             $component = 'wiki';
             break;
+        case 'amos_contribution':
+            $component = 'local_amos';
+            break;
         default:
-            throw new moodle_exception('unknowncomponent');
+            throw new moodle_exception('unknowncomponent', 'block_spam_deletion', '', $commentarea);
         }
 
         return $component;
