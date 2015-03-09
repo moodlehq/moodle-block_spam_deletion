@@ -91,7 +91,10 @@ function block_spam_deletion_detect_post_spam() {
     if (!block_spam_deletion_message_is_spammy($postcontent['text'])
         && !block_spam_deletion_message_is_spammy($postsubject)) {
 
-        return;
+        // Message doesn't look spammy, but is the user over their 'new post threshold'?
+        if (!block_spam_deletion_user_over_post_threshold()) {
+            return;
+        }
     }
 
     $sql = 'SELECT count(id) FROM {forum_posts} WHERE userid = :userid AND created < :yesterday';
@@ -120,4 +123,25 @@ function block_spam_deletion_detect_post_spam() {
     echo $OUTPUT->footer();
 
     die();
+}
+
+/**
+ * Detect if user is over 'post threshold' for period. NOTE: this
+ * does not consider if the user is 'new' - that is hanlded elsewhere.
+ *
+ * @return bool true if user if over post threshold.
+ */
+function block_spam_deletion_user_over_post_threshold() {
+    global $CFG, $USER, $DB;
+
+    if (empty($CFG->block_spam_deletion_throttle_postcount) ||
+        empty($CFG->block_spam_deletion_throttle_duration)) {
+            // Handle config not set.
+            return false;
+    }
+
+    $params = array('userid' => $USER->id, 'timestamp' => (time() - $CFG->block_spam_deletion_throttle_duration));
+    $postcount = $DB->count_records_select('forum_posts', 'userid = :userid AND created > :timestamp', $params);
+
+    return ($postcount > $CFG->block_spam_deletion_throttle_postcount);
 }
