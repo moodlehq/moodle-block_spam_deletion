@@ -143,5 +143,5 @@ function block_spam_deletion_user_over_post_threshold() {
     $params = array('userid' => $USER->id, 'timestamp' => (time() - $CFG->block_spam_deletion_throttle_duration));
     $postcount = $DB->count_records_select('forum_posts', 'userid = :userid AND created > :timestamp', $params);
 
-    return ($postcount > $CFG->block_spam_deletion_throttle_postcount);
+    return ($postcount >= $CFG->block_spam_deletion_throttle_postcount);
 }
