@@ -75,7 +75,7 @@ function block_spam_deletion_message_is_spammy($message) {
  * Make sure the submitted forum post form does not contain a spam.
  */
 function block_spam_deletion_detect_post_spam() {
-    global $DB, $USER, $OUTPUT, $PAGE, $SITE;
+    global $DB, $USER;
 
     $postform = optional_param('_qf__mod_forum_post_form', 0, PARAM_BOOL);
     if (!$postform) {
@@ -86,6 +86,8 @@ function block_spam_deletion_detect_post_spam() {
     if (!isset($postcontent['text'])) {
         return;
     }
+
+    block_spam_deletion_run_akismet_filtering($postcontent['text']);
 
     $postsubject = optional_param('subject', null, PARAM_RAW);
     if (!block_spam_deletion_message_is_spammy($postcontent['text'])
@@ -106,23 +108,8 @@ function block_spam_deletion_detect_post_spam() {
         return;
     }
 
-    // OK - looks like a spammer. Lets stop the post from continuining and notify the user.
-
-    // It sucks a bit that we die() becase the user can't easily edit their post if they are real, but
-    // this seems to be the best way to make it clear.
-
-    $PAGE->set_context(context_system::instance());
-    $PAGE->set_url('/');
-    $PAGE->set_title(get_string('error'));
-    $PAGE->set_heading($SITE->fullname);
-
-    echo $OUTPUT->header();
-    echo $OUTPUT->heading(get_string('messageblockedtitle', 'block_spam_deletion'));
-    echo $OUTPUT->box(get_string('messageblocked', 'block_spam_deletion'));
-    echo $OUTPUT->box(html_writer::tag('pre', s($postcontent['text']), array('class' => 'notifytiny')));
-    echo $OUTPUT->footer();
-
-    die();
+    // OK - we should block the post..
+    block_spam_deletion_block_post_and_die($postcontent['text']);
 }
 
 /**
@@ -144,4 +131,48 @@ function block_spam_deletion_user_over_post_threshold() {
     $postcount = $DB->count_records_select('forum_posts', 'userid = :userid AND created > :timestamp', $params);
 
     return ($postcount >= $CFG->block_spam_deletion_throttle_postcount);
+}
+
+/**
+ * Print a 'friendly' error message informing the user their post has been
+ * blocked and die.
+ * @param text $submittedcontent the content which was blocked from posting.
+ */
+function block_spam_deletion_block_post_and_die($submittedcontent) {
+    global $PAGE, $OUTPUT, $SITE;
+    // It sucks a bit that we die() becase the user can't easily edit their post if they are real, but
+    // this seems to be the best way to make it clear.
+
+    $PAGE->set_context(context_system::instance());
+    $PAGE->set_url('/');
+    $PAGE->set_title(get_string('error'));
+    $PAGE->set_heading($SITE->fullname);
+
+    echo $OUTPUT->header();
+    echo $OUTPUT->heading(get_string('messageblockedtitle', 'block_spam_deletion'));
+    echo $OUTPUT->box(get_string('messageblocked', 'block_spam_deletion'));
+    echo $OUTPUT->box(html_writer::tag('pre', s($submittedcontent), array('class' => 'notifytiny')));
+    echo $OUTPUT->footer();
+}
+
+/**
+ * Runs akismet filtering checks and blocks post if necessary.
+ */
+function block_spam_deletion_run_akismet_filtering($content) {
+    global $CFG, $USER;
+
+    if (empty($CFG->block_spam_deletion_akismet_key) ||
+        empty($CFG->block_spam_deletion_akismet_account_age)) {
+        return;
+    }
+
+    if ($USER->firstaccess < (time() - $CFG->block_spam_deletion_akismet_account_age)) {
+        return;
+    }
+
+    // Do akismet detection of new users post content..
+    $akismet = new block_spam_deletion\akismet($CFG->block_spam_deletion_akismet_key);
+    if ($akismet->is_user_posting_spam($content)) {
+        block_spam_deletion_block_post_and_die($content);
+    }
 }

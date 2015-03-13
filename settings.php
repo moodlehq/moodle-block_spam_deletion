@@ -40,4 +40,13 @@ if ($ADMIN->fulltree) {
                                                     get_string('postthrottleduration','block_spam_deletion'),
                                                     get_string('postthrottledurationdesc','block_spam_deletion'),
                                                     60*60*4));
+
+    $settings->add(new admin_setting_configtext('block_spam_deletion_akismet_key',
+                                                get_string('akismetkey','block_spam_deletion'),
+                                                '', ''));
+
+    $settings->add(new admin_setting_configduration('block_spam_deletion_akismet_account_age',
+                                                get_string('akismetaccountage','block_spam_deletion'),
+                                                get_string('akismetaccountagedesc','block_spam_deletion'),
+                                                WEEKSECS));
 }
