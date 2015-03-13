@@ -153,6 +153,7 @@ function block_spam_deletion_block_post_and_die($submittedcontent) {
     echo $OUTPUT->box(get_string('messageblocked', 'block_spam_deletion'));
     echo $OUTPUT->box(html_writer::tag('pre', s($submittedcontent), array('class' => 'notifytiny')));
     echo $OUTPUT->footer();
+    die;
 }
 
 /**
