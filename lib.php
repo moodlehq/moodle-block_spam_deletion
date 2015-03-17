@@ -856,7 +856,7 @@ class akismet_table extends table_sql
         $this->set_sql('id, comment_author, comment_content', '{block_spam_deletion_akismet}', 'is_spam = ?', array('1'));
 
         $this->define_columns(array('comment_author', 'comment_content', 'actions'));
-        $this->define_headers(array('Users Name', 'Spam conent', 'Actions'));
+        $this->define_headers(array('Users Name', 'Spam content', 'Actions'));
         $this->collapsible(false);
         $this->sortable(false);
     }
@@ -872,7 +872,7 @@ class akismet_table extends table_sql
     }
 
     public function print_nothing_to_display() {
-        echo 'Nothing to send to report to akismet';
+        echo 'Nothing to send to akismet';
     }
 
 }
