@@ -395,17 +395,19 @@ class forum_post_spam extends spam_report
     /**
      * Build up the data needed to submit a spam report to akismet and populate
      * our spam report queue with it.
+     *
+     * @return int id of akismet spam report.
      */
-    protected function populate_akismet_spam_report() {
+    public function populate_akismet_spam_report() {
         global $DB;
 
         $record = array();
         $record['original_id'] = $this->post->id;
         $record['is_spam'] = '1';
 
-        if ($DB->record_exists('block_spam_deletion_akismet', $record)) {
+        if ($record = $DB->get_record('block_spam_deletion_akismet', $record, 'id')) {
             // Already in the queue, dont add again.
-            return;
+            return $record->id;
         }
 
         $spammer = $DB->get_record('user', array('id' => $this->post->userid));
@@ -418,7 +420,7 @@ class forum_post_spam extends spam_report
         $record['comment_author_url'] = $spammer->url;
         $record['comment_content'] = $this->post->message;
 
-        $DB->insert_record('block_spam_deletion_akismet', $record);
+        return $DB->insert_record('block_spam_deletion_akismet', $record);
     }
 
     /**

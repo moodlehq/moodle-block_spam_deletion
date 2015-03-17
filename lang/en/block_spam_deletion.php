@@ -25,6 +25,7 @@
 $string['akismetaccountage'] = 'Akismet user account age';
 $string['akismetaccountagedesc'] = 'Skip akismet spam detection on posts from user accounts older than this value.';
 $string['akismetkey'] = 'Akismet API key';
+$string['akismetreports'] = 'Akismet reports: {$a}';
 $string['alreadyreported'] = 'You\'ve already reported this content as spam.';
 $string['badwords'] = 'diet,viagra,football,soccer,live,match';
 $string['badwordslist'] = 'Custom spam words list';
@@ -38,6 +39,7 @@ $string['countmessageread'] = 'Read messages: {$a}';
 $string['countforum'] = 'Forum posts: {$a}';
 $string['countcomment'] = 'Comments: {$a}';
 $string['counttags'] = 'Unique tags: {$a}';
+$string['deleteandreporttoakismet'] = 'Delete user and save content for akismet report';
 $string['deletebutton'] = 'Delete spammer';
 $string['eventspammerdeleted'] = 'Spammer deleted';
 $string['notrecentlyaccessed'] = 'Beware! The first access date of this account is more than 1 month ago. Make double sure it is really a spammer.';

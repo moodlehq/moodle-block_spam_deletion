@@ -21,6 +21,7 @@ $postid = optional_param('postid', 0, PARAM_INT);
 $commentid = optional_param('commentid', 0, PARAM_INT);
 
 $confirmvote = optional_param('confirmvote', false, PARAM_BOOL);
+$deleteuser = optional_param('deleteuser', false, PARAM_BOOL);
 
 $url = new moodle_url('/blocks/spam_deletion/reportspam.php');
 if ($postid) {
@@ -68,6 +69,17 @@ if ($lib->has_voted($USER->id)) {
     require_sesskey();
     $lib->register_vote($USER->id);
     redirect($returnurl, get_string('thanksspamrecorded', 'block_spam_deletion'));
+}else if ($deleteuser && !empty($postid)) {
+    // Special shortcut for 'admins' deleting - only implemented for forum posts.
+    require_sesskey();
+    require_capability('block/spam_deletion:spamdelete', context_system::instance());
+
+    // Create akismet spam report.
+    $lib->populate_akismet_spam_report();
+
+    $spamlib = new spammerlib($lib->post->userid);
+    $spamlib->set_spammer();
+    redirect(new moodle_url('/mod/forum/view.php', array('f' => $lib->post->forum)), 'Spammer deleted');
 } else {
     echo $OUTPUT->header();
     echo $OUTPUT->heading(get_string('reportcontentasspam', 'block_spam_deletion'));
@@ -76,6 +88,12 @@ if ($lib->has_voted($USER->id)) {
     $continuebutton = new single_button($yesurl, get_string('yes'));
     $cancelbutton = new single_button($returnurl, get_string('no'), 'get');
     echo $OUTPUT->confirm(get_string('confirmspamreportmsg', 'block_spam_deletion'), $continuebutton, $cancelbutton);
+    if (!empty($postid) && has_capability('block/spam_deletion:spamdelete', context_system::instance())) {
+        // Special shortcut for 'admins' deleting - only implemented for forum posts.
+        $deleteurl = clone $PAGE->url;
+        $deleteurl->param('deleteuser', true);
+        echo $OUTPUT->single_button($deleteurl, get_string('deleteandreporttoakismet', 'block_spam_deletion'), 'post', array('class' => 'mdl-align'));
+    }
     echo $lib->content_html();
 }
 echo $OUTPUT->footer();

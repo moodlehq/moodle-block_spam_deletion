@@ -107,6 +107,15 @@ class block_spam_deletion extends block_base {
                     new moodle_url('/blocks/spam_deletion/viewvotes.php'),
                     get_string('spamreports', 'block_spam_deletion', $votecount)));
             }
+
+            // Display link to akismet count
+            $akismetcount = $DB->count_records('block_spam_deletion_akismet');
+
+            if ($akismetcount) {
+                $this->content->text .= html_writer::tag('p', html_writer::link(
+                    new moodle_url('/blocks/spam_deletion/viewvotes.php'),
+                    get_string('akismetreports', 'block_spam_deletion', $akismetcount)));
+            }
         }
 
         if ($this->page->pagetype != 'user-profile') {
