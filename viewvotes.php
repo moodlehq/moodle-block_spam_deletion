@@ -26,14 +26,17 @@ $PAGE->set_heading('Spam reports');
 require_login();
 require_capability('block/spam_deletion:viewspamreport', $PAGE->context);
 
-
-
 echo $OUTPUT->header();
 
 echo $OUTPUT->heading('Forum post spam reports');
 $ft= new forum_spam_report_table('1');
 $ft->define_baseurl($PAGE->url);
 echo $ft->out(50, true);
+
+echo $OUTPUT->heading('Improve akismet filtering');
+$akismettable = new akismet_table('1');
+$akismettable->define_baseurl($PAGE->url);
+echo $akismettable->out(50, true);
 
 echo $OUTPUT->heading('Forum post spam reports [deleted]');
 $dft = new forum_deleted_spam_report_table('2');

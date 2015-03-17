@@ -33,6 +33,7 @@ class akismet {
 
     const VERIFY_KEY_URL = 'https://rest.akismet.com/1.1/verify-key';
     protected $commentverifyurl = "https://{KEY_PLACEHOLDER}.rest.akismet.com/1.1/comment-check";
+    protected $submitspamurl = "https://{KEY_PLACEHOLDER}.rest.akismet.com/1.1/submit-spam";
     protected $testingstr = '';
     protected $apikey = '';
     protected $apikeyvalid = false;
@@ -50,6 +51,7 @@ class akismet {
         }
         $this->apikey = $apikey;
         $this->commentverifyurl = str_replace('{KEY_PLACEHOLDER}', $this->apikey, $this->commentverifyurl);
+        $this->submitspamurl = str_replace('{KEY_PLACEHOLDER}', $this->apikey, $this->submitspamurl);
         $this->validate_key();
     }
 
@@ -114,6 +116,40 @@ class akismet {
             if ($response === 'true') {
                 return true;
             }
+        }
+
+        return false;
+    }
+
+    /**
+     * Reports SPAM which hasn't been detected by akismet
+     *
+     * @param stdClass $record from block_spam_deletion_akismet table
+     * @return bool true if akismet acknowleded the spam report.
+     */
+    public function report_missed_spam($record) {
+        global $USER, $CFG;
+
+        if (!$this->apikeyvalid) {
+            // Naughty use of error_log..
+            error_log('block_spam_deletion: akami api key not valid. Could not report missed spam');
+            return false;
+        }
+
+        $params = 'blog='.urlencode($CFG->wwwroot).
+                '&user_ip='.urlencode($record->user_ip).
+                '&user_agent='.urlencode($record->user_agent).
+                '&comment_type=comment'.
+                '&comment_author='.urlencode($record->comment_author).
+                '&comment_author_email='.urlencode($record->comment_author_email).
+                '&comment_content='.urlencode($record->comment_content).
+                '&blog_charset=UTF-8'.
+                $this->testingstr;
+
+        $curl = new curl();
+        $response = $curl->post($this->submitspamurl, $params);
+        if ($curl->info['http_code'] == 200) {
+            return true;
         }
 
         return false;

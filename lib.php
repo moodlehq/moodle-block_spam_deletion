@@ -371,6 +371,8 @@ class forum_post_spam extends spam_report
         $record->postid = $this->post->id;
         $DB->insert_record('block_spam_deletion_votes', $record);
 
+        $this->populate_akismet_spam_report();
+
         // Send message to notifiers.
         $this->notify_spam($record->spammerid, $record->voterid);
     }
@@ -388,6 +390,55 @@ class forum_post_spam extends spam_report
         $s .= forum_print_post($this->post, $this->discussion, $this->forum, $this->cm, $this->course, false, false, false, '', '', null, true, null, true);
         $s .= html_writer::end_tag('div');
         return $s;
+    }
+
+    /**
+     * Build up the data needed to submit a spam report to akismet and populate
+     * our spam report queue with it.
+     */
+    protected function populate_akismet_spam_report() {
+        global $DB;
+
+        $record = array();
+        $record['original_id'] = $this->post->id;
+        $record['is_spam'] = '1';
+
+        if ($DB->record_exists('block_spam_deletion_akismet', $record)) {
+            // Already in the queue, dont add again.
+            return;
+        }
+
+        $spammer = $DB->get_record('user', array('id' => $this->post->userid));
+        $postip = $this->get_ip_post_created_from();
+
+        $record['user_ip'] = $postip ? $postip : $spammer->lastip;
+        $record['user_agent'] = ''; // No chance, we dont log this.
+        $record['comment_author'] = fullname($spammer);
+        $record['comment_author_email'] = $spammer->email;
+        $record['comment_author_url'] = $spammer->url;
+        $record['comment_content'] = $this->post->message;
+
+        $DB->insert_record('block_spam_deletion_akismet', $record);
+    }
+
+    /**
+     * Attempts to get the original ip which a forum post was posted with.
+     *
+     * NOTE: This depends on the standard log store table being enabled
+     * which is pretty hacky..
+     * @return string|bool ip if found, false if not
+     */
+    protected function get_ip_post_created_from() {
+        global $DB;
+        $params = array();
+        // NOTE: these fields are chosen carefuly to utilise existing index.
+        $params['userid'] = $this->post->userid;
+        $params['contextlevel'] = $this->context->contextlevel;
+        $params['contextinstanceid'] = $this->context->instanceid;
+        $params['crud'] = 'c';
+        $params['objectid'] = $this->post->id;
+        $params['eventname'] = '\mod_forum\event\post_created';
+        return $DB->get_field('logstore_standard_log', 'ip', $params);
     }
 
 }
@@ -795,4 +846,33 @@ class user_profile_spam_table extends spam_report_table
         $notspamurl = new moodle_url('/blocks/spam_deletion/marknotspam.php', array('spammerid' => $row->spammerid));
         return $OUTPUT->single_button($notspamurl, 'Remove spam report');
     }
+}
+
+class akismet_table extends table_sql
+{
+
+    public function __construct($uniqueid) {
+        parent::__construct($uniqueid);
+        $this->set_sql('id, comment_author, comment_content', '{block_spam_deletion_akismet}', 'is_spam = ?', array('1'));
+
+        $this->define_columns(array('comment_author', 'comment_content', 'actions'));
+        $this->define_headers(array('Users Name', 'Spam conent', 'Actions'));
+        $this->collapsible(false);
+        $this->sortable(false);
+    }
+
+    public function col_actions($row) {
+        global $OUTPUT;
+        $reporturl = new moodle_url('/blocks/spam_deletion/improveakismet.php', array('id' => $row->id));
+        $ignoreurl = clone $reporturl;
+        $ignoreurl->param('ignore', true);
+
+        return $OUTPUT->single_button($reporturl, 'Report to akismet') .
+            $OUTPUT->single_button($ignoreurl, 'Ignore (not spam)');
+    }
+
+    public function print_nothing_to_display() {
+        echo 'Nothing to send to report to akismet';
+    }
+
 }

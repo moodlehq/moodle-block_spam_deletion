@@ -1,43 +1,59 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="blocks/spam_deletion/db" VERSION="20121220" COMMENT="XMLDB file for Moodle blocks/spam_deletion"
+<XMLDB PATH="blocks/spam_deletion/db" VERSION="20150317" COMMENT="XMLDB file for Moodle blocks/spam_deletion"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
 >
   <TABLES>
-    <TABLE NAME="block_spam_deletion_votes" COMMENT="Votes for spam" NEXT="block_spam_deletion_posts">
+    <TABLE NAME="block_spam_deletion_votes" COMMENT="Votes for spam">
       <FIELDS>
-        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true" NEXT="spammerid"/>
-        <FIELD NAME="spammerid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="User id of the spammer" PREVIOUS="id" NEXT="voterid"/>
-        <FIELD NAME="voterid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="userid of the voter" PREVIOUS="spammerid" NEXT="postid"/>
-        <FIELD NAME="postid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="id of the forum_post" PREVIOUS="voterid" NEXT="commentid"/>
-        <FIELD NAME="commentid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="ID of comment table" PREVIOUS="postid" NEXT="messageid"/>
-        <FIELD NAME="messageid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="message id from the message_read table" PREVIOUS="commentid" NEXT="weighting"/>
-        <FIELD NAME="weighting" TYPE="int" LENGTH="4" NOTNULL="true" SEQUENCE="false" COMMENT="The weighting of the vote" PREVIOUS="messageid"/>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="spammerid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="User id of the spammer"/>
+        <FIELD NAME="voterid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="userid of the voter"/>
+        <FIELD NAME="postid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="id of the forum_post"/>
+        <FIELD NAME="commentid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="ID of comment table"/>
+        <FIELD NAME="messageid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="message id from the message_read table"/>
+        <FIELD NAME="weighting" TYPE="int" LENGTH="4" NOTNULL="true" SEQUENCE="false" COMMENT="The weighting of the vote"/>
       </FIELDS>
       <KEYS>
-        <KEY NAME="primary" TYPE="primary" FIELDS="id" NEXT="spammeriduserid"/>
-        <KEY NAME="spammeriduserid" TYPE="foreign" FIELDS="spammerid" REFTABLE="user" REFFIELDS="id" PREVIOUS="primary" NEXT="voteriduser"/>
-        <KEY NAME="voteriduser" TYPE="foreign" FIELDS="voterid" REFTABLE="user" REFFIELDS="id" PREVIOUS="spammeriduserid" NEXT="postidforumpost"/>
-        <KEY NAME="postidforumpost" TYPE="foreign" FIELDS="postid" REFTABLE="forum_posts" REFFIELDS="id" PREVIOUS="voteriduser" NEXT="commentid-foreign"/>
-        <KEY NAME="commentid-foreign" TYPE="foreign" FIELDS="commentid" REFTABLE="comments" REFFIELDS="id" COMMENT="commentid foreign key" PREVIOUS="postidforumpost"/>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="spammeriduserid" TYPE="foreign" FIELDS="spammerid" REFTABLE="user" REFFIELDS="id"/>
+        <KEY NAME="voteriduser" TYPE="foreign" FIELDS="voterid" REFTABLE="user" REFFIELDS="id"/>
+        <KEY NAME="postidforumpost" TYPE="foreign" FIELDS="postid" REFTABLE="forum_posts" REFFIELDS="id"/>
+        <KEY NAME="commentid-foreign" TYPE="foreign" FIELDS="commentid" REFTABLE="comments" REFFIELDS="id" COMMENT="commentid foreign key"/>
       </KEYS>
       <INDEXES>
-        <INDEX NAME="idx-spammerid-weighting" UNIQUE="false" FIELDS="spammerid, weighting" NEXT="idx-unique-voterid-postid"/>
-        <INDEX NAME="idx-unique-voterid-postid" UNIQUE="true" FIELDS="voterid, postid" PREVIOUS="idx-spammerid-weighting" NEXT="idx-unique-voterid-commentid"/>
-        <INDEX NAME="idx-unique-voterid-commentid" UNIQUE="true" FIELDS="voterid, commentid" COMMENT="Unique for voter and comment" PREVIOUS="idx-unique-voterid-postid" NEXT="idx-unique-voterid-messageid"/>
-        <INDEX NAME="idx-unique-voterid-messageid" UNIQUE="true" FIELDS="voterid, messageid" COMMENT="Unique index for voter-messageid" PREVIOUS="idx-unique-voterid-commentid"/>
+        <INDEX NAME="idx-spammerid-weighting" UNIQUE="false" FIELDS="spammerid, weighting"/>
+        <INDEX NAME="idx-unique-voterid-postid" UNIQUE="true" FIELDS="voterid, postid"/>
+        <INDEX NAME="idx-unique-voterid-commentid" UNIQUE="true" FIELDS="voterid, commentid" COMMENT="Unique for voter and comment"/>
+        <INDEX NAME="idx-unique-voterid-messageid" UNIQUE="true" FIELDS="voterid, messageid" COMMENT="Unique index for voter-messageid"/>
       </INDEXES>
     </TABLE>
-    <TABLE NAME="block_spam_deletion_posts" COMMENT="Original content of forum posts" PREVIOUS="block_spam_deletion_votes">
+    <TABLE NAME="block_spam_deletion_posts" COMMENT="Original content of forum posts">
       <FIELDS>
-        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true" NEXT="postid"/>
-        <FIELD NAME="postid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Forum post id" PREVIOUS="id" NEXT="subject"/>
-        <FIELD NAME="subject" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false" PREVIOUS="postid" NEXT="message"/>
-        <FIELD NAME="message" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="original message" PREVIOUS="subject"/>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="postid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Forum post id"/>
+        <FIELD NAME="subject" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="message" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="original message"/>
       </FIELDS>
       <KEYS>
-        <KEY NAME="primary" TYPE="primary" FIELDS="id" NEXT="postid"/>
-        <KEY NAME="postid" TYPE="foreign" FIELDS="postid" REFTABLE="forum_posts" REFFIELDS="id" PREVIOUS="primary"/>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="postid" TYPE="foreign" FIELDS="postid" REFTABLE="forum_posts" REFFIELDS="id"/>
+      </KEYS>
+    </TABLE>
+    <TABLE NAME="block_spam_deletion_akismet" COMMENT="Copy of posts data to send to akismet to report as missed spam or ham. Matches akismet API fields">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="original_id" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="Original post id from forum_posts table"/>
+        <FIELD NAME="is_spam" TYPE="int" LENGTH="1" NOTNULL="false" SEQUENCE="false" COMMENT="1 if spam, 0 if ham (not akismet field)"/>
+        <FIELD NAME="user_ip" TYPE="char" LENGTH="45" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="user_agent" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="comment_author" TYPE="char" LENGTH="500" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="comment_author_email" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="comment_author_url" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="comment_content" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
       </KEYS>
     </TABLE>
   </TABLES>
