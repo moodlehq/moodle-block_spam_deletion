@@ -102,6 +102,7 @@ class akismet {
                 '&comment_type=comment'.
                 '&comment_author='.urlencode(fullname($USER)).
                 '&comment_author_email='.urlencode($USER->email).
+                '&comment_author_url='.urlencode($USER->url).
                 '&comment_content='.urlencode($postedcontent).
                 '&blog_lang='.urlencode(current_language()).
                 '&blog_charset=UTF-8'.
