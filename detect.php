@@ -75,7 +75,7 @@ function block_spam_deletion_message_is_spammy($message) {
  * Make sure the submitted forum post form does not contain a spam.
  */
 function block_spam_deletion_detect_post_spam() {
-    global $DB, $USER;
+    global $DB, $USER, $CFG;
 
     $postform = optional_param('_qf__mod_forum_post_form', 0, PARAM_BOOL);
     if (!$postform) {
@@ -87,8 +87,12 @@ function block_spam_deletion_detect_post_spam() {
         return;
     }
 
+    $courseid = optional_param('course', SITEID, PARAM_INT);
+    $course = $DB->get_record('course', array('id' => $courseid));
+    $lang = isset($course->lang) ? $course->lang : $CFG->lang;
+
     $postsubject = optional_param('subject', null, PARAM_RAW);
-    block_spam_deletion_run_akismet_filtering($postsubject."\n".$postcontent['text']);
+    block_spam_deletion_run_akismet_filtering($postsubject."\n".$postcontent['text'], $lang);
 
     if (!block_spam_deletion_message_is_spammy($postcontent['text'])
         && !block_spam_deletion_message_is_spammy($postsubject)) {
@@ -158,8 +162,10 @@ function block_spam_deletion_block_post_and_die($submittedcontent) {
 
 /**
  * Runs akismet filtering checks and blocks post if necessary.
+ * @param string $content the text content
+ * @param string $language the language code of content
  */
-function block_spam_deletion_run_akismet_filtering($content) {
+function block_spam_deletion_run_akismet_filtering($content, $language) {
     global $CFG, $USER;
 
     if (empty($CFG->block_spam_deletion_akismet_key) ||
@@ -173,7 +179,7 @@ function block_spam_deletion_run_akismet_filtering($content) {
 
     // Do akismet detection of new users post content..
     $akismet = new block_spam_deletion\akismet($CFG->block_spam_deletion_akismet_key);
-    if ($akismet->is_user_posting_spam($content)) {
+    if ($akismet->is_user_posting_spam($content, $language)) {
         block_spam_deletion_block_post_and_die($content);
     }
 }

@@ -77,10 +77,11 @@ class akismet {
      * uses $USER.
      *
      * @param text $postedcontent The text content the user posted.
+     * @param string $lang the language code of the content
      * @return bool true if akismet thinks its spam.
      */
-    public function is_user_posting_spam($postedcontent) {
-        global $USER, $CFG;
+    public function is_user_posting_spam($postedcontent, $lang) {
+        global $USER, $CFG, $COURSE;
 
         if (!$this->apikeyvalid) {
             // Naughty use of error_log..
@@ -106,7 +107,7 @@ class akismet {
                 '&comment_author_email='.urlencode($USER->email).
                 '&comment_author_url='.urlencode($USER->url).
                 '&comment_content='.urlencode($postedcontent).
-                '&blog_lang='.urlencode(current_language()).
+                '&blog_lang='.urlencode($lang).
                 '&blog_charset=UTF-8'.
                 $this->testingstr;
 
