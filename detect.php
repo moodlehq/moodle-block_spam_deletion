@@ -94,12 +94,15 @@ function block_spam_deletion_detect_post_spam() {
     $postsubject = optional_param('subject', null, PARAM_RAW);
     block_spam_deletion_run_akismet_filtering($postsubject."\n".$postcontent['text'], $lang);
 
+    $errorcode = 'triggerwords';
     if (!block_spam_deletion_message_is_spammy($postcontent['text'])
         && !block_spam_deletion_message_is_spammy($postsubject)) {
 
         // Message doesn't look spammy, but is the user over their 'new post threshold'?
         if (!block_spam_deletion_user_over_post_threshold()) {
             return;
+        } else {
+            $errorcode = 'postlimit';
         }
     }
 
@@ -113,7 +116,7 @@ function block_spam_deletion_detect_post_spam() {
     }
 
     // OK - we should block the post..
-    block_spam_deletion_block_post_and_die($postcontent['text']);
+    block_spam_deletion_block_post_and_die($postcontent['text'], $errorcode);
 }
 
 /**
@@ -140,9 +143,10 @@ function block_spam_deletion_user_over_post_threshold() {
 /**
  * Print a 'friendly' error message informing the user their post has been
  * blocked and die.
- * @param text $submittedcontent the content which was blocked from posting.
+ * @param text $submittedcontent the content which was blocked from posting.yy
+ * @param text $errorcode for debugging
  */
-function block_spam_deletion_block_post_and_die($submittedcontent) {
+function block_spam_deletion_block_post_and_die($submittedcontent, $errorcode) {
     global $PAGE, $OUTPUT, $SITE;
     // It sucks a bit that we die() becase the user can't easily edit their post if they are real, but
     // this seems to be the best way to make it clear.
@@ -156,6 +160,7 @@ function block_spam_deletion_block_post_and_die($submittedcontent) {
     echo $OUTPUT->heading(get_string('messageblockedtitle', 'block_spam_deletion'));
     echo $OUTPUT->box(get_string('messageblocked', 'block_spam_deletion'));
     echo $OUTPUT->box(html_writer::tag('pre', s($submittedcontent), array('class' => 'notifytiny')));
+    echo $OUTPUT->box("Error code: $errorcode");
     echo $OUTPUT->footer();
     die;
 }
@@ -176,10 +181,46 @@ function block_spam_deletion_run_akismet_filtering($content, $language) {
     if ($USER->firstaccess < (time() - $CFG->block_spam_deletion_akismet_account_age)) {
         return;
     }
+    block_spam_deletion_run_characterset_filtering($content, $lang);
 
     // Do akismet detection of new users post content..
     $akismet = new block_spam_deletion\akismet($CFG->block_spam_deletion_akismet_key);
     if ($akismet->is_user_posting_spam($content, $language)) {
-        block_spam_deletion_block_post_and_die($content);
+        block_spam_deletion_block_post_and_die($content, 'akismet');
+    }
+}
+
+/**
+ * Run filtering on content dependent on the expected language being posted in.
+ *
+ * Works by converting from utf8 to the 'oldcharset' set in the langconfig and back again
+ * and counting the percentage of unrecognised characters. Should for example, stop excessive
+ * korean from being used in spanish course.
+ *
+ * @param text $content the text being posted
+ * @param text $language the language code post should be in
+ */
+function block_spam_deletion_run_characterset_filtering($content, $language) {
+    global $CFG;
+
+    if (empty($CFG->block_spam_deletion_invalidchars_percentage)) {
+        // Handle config not set.
+        return;
+    }
+
+    $oldcharset = get_string_manager()->get_string('oldcharset', 'langconfig', null, $language);
+
+    // Remove existing ? and 'space' from content so we can count without them at end.
+    $text = preg_replace('(\?+|\s+)', '', $content);
+    $intermediary = core_text::convert($text, 'UTF-8', $oldcharset);
+    $output = core_text::convert($intermediary, $oldcharset, 'UTF-8');
+
+    // Count unknown characters.
+    $missingcharscount = substr_count($output, '?');
+    $percentagemissing = round(($missingcharscount / core_text::strlen($text)) * 100);
+    //debugging("Input: $text \nOutput (via $oldcharset): $output \nSummary: $percentagemissing %)");
+
+    if ($percentagemissing > $CFG->block_spam_deletion_invalidchars_percentage) {
+        block_spam_deletion_block_post_and_die($content, "$percentagemissing% invalid chars");
     }
 }

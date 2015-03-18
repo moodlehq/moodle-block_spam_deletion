@@ -49,4 +49,10 @@ if ($ADMIN->fulltree) {
                                                 get_string('akismetaccountage','block_spam_deletion'),
                                                 get_string('akismetaccountagedesc','block_spam_deletion'),
                                                 WEEKSECS));
+
+    $settings->add(new admin_setting_configtext('block_spam_deletion_invalidchars_percentage',
+                                                get_string('invalidcharspercentage','block_spam_deletion'),
+                                                get_string('invalidcharspercentagedesc','block_spam_deletion'),
+                                                50,
+                                                PARAM_INT));
 }
