@@ -405,9 +405,9 @@ class forum_post_spam extends spam_report
         $record['original_id'] = $this->post->id;
         $record['is_spam'] = '1';
 
-        if ($record = $DB->get_record('block_spam_deletion_akismet', $record, 'id')) {
+        if ($akismetrecord = $DB->get_record('block_spam_deletion_akismet', $record, 'id')) {
             // Already in the queue, dont add again.
-            return $record->id;
+            return $akismetrecord->id;
         }
 
         $spammer = $DB->get_record('user', array('id' => $this->post->userid));
