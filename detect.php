@@ -87,9 +87,9 @@ function block_spam_deletion_detect_post_spam() {
         return;
     }
 
-    block_spam_deletion_run_akismet_filtering($postcontent['text']);
-
     $postsubject = optional_param('subject', null, PARAM_RAW);
+    block_spam_deletion_run_akismet_filtering($postsubject."\n".$postcontent['text']);
+
     if (!block_spam_deletion_message_is_spammy($postcontent['text'])
         && !block_spam_deletion_message_is_spammy($postsubject)) {
 

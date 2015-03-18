@@ -418,7 +418,7 @@ class forum_post_spam extends spam_report
         $record['comment_author'] = fullname($spammer);
         $record['comment_author_email'] = $spammer->email;
         $record['comment_author_url'] = $spammer->url;
-        $record['comment_content'] = $this->post->message;
+        $record['comment_content'] = $this->post->subject."\n".$this->post->message;
 
         return $DB->insert_record('block_spam_deletion_akismet', $record);
     }
