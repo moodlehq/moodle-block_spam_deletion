@@ -36,7 +36,6 @@ if ($ignore) {
 } else {
     $akismet = new block_spam_deletion\akismet($CFG->block_spam_deletion_akismet_key);
     if ($akismet->report_missed_spam($report)) {
-        $redirectmessage = 'Spam reported to akismet succesfully';
         $DB->delete_records('block_spam_deletion_akismet', array('id' => $reportid));
     } else {
         $redirectmessage = 'Problem when submitting spam to akismet.';
