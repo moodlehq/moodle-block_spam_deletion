@@ -151,6 +151,9 @@ function block_spam_deletion_block_post_and_die($submittedcontent, $errorcode) {
     // It sucks a bit that we die() becase the user can't easily edit their post if they are real, but
     // this seems to be the best way to make it clear.
 
+    // Record count of blocked posts and suspend account if necessary..
+    block_spam_deletion_record_blocked_post();
+
     $PAGE->set_context(context_system::instance());
     $PAGE->set_url('/');
     $PAGE->set_title(get_string('error'));
@@ -222,5 +225,36 @@ function block_spam_deletion_run_characterset_filtering($content, $language) {
 
     if ($percentagemissing > $CFG->block_spam_deletion_invalidchars_percentage) {
         block_spam_deletion_block_post_and_die($content, "$percentagemissing% invalid chars");
+    }
+}
+
+/**
+ * Record a user has had their post blocked - and suspend them if necessary.
+ */
+function block_spam_deletion_record_blocked_post() {
+    global $USER, $DB;
+
+    $blockcount = get_user_preferences('block_spam_deletion_blocked_posts_count', 0);
+    $blockcount++;
+
+    // On fourth blocked post, we suspend their account.
+    if ($blockcount > 3) {
+        // Remove blockcount preference in case they get un-suspended
+        set_user_preference('block_spam_deletion_blocked_posts_count', null);
+
+        // Suspend the user and update their profile description.
+        $updateuser = new stdClass();
+        $updateuser->id = $USER->id;
+        $updateuser->suspended = 1;
+        $updateuser->description = get_string('blockedspamdescription', 'block_spam_deletion', date('l jS F g:i A'));
+        $DB->update_record('user', $updateuser);
+
+        // Kill the users session.
+        \core\session\manager::kill_user_sessions($USER->id);
+
+        // Redirect to homepage.
+        redirect(new moodle_url('/'), 'Goodbye Spammer');
+    } else {
+        set_user_preference('block_spam_deletion_blocked_posts_count', $blockcount);
     }
 }
