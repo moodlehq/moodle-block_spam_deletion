@@ -181,7 +181,7 @@ function block_spam_deletion_run_akismet_filtering($content, $language) {
     if ($USER->firstaccess < (time() - $CFG->block_spam_deletion_akismet_account_age)) {
         return;
     }
-    block_spam_deletion_run_characterset_filtering($content, $lang);
+    block_spam_deletion_run_characterset_filtering($content, $language);
 
     // Do akismet detection of new users post content..
     $akismet = new block_spam_deletion\akismet($CFG->block_spam_deletion_akismet_key);
