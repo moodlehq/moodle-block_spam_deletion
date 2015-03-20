@@ -22,6 +22,8 @@
  * @copyright 2012 Rajesh Taneja
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+$string['accountsuspended'] = 'Your account has been suspended, as our spam prevention system has flagged it as possibly belonging to a spammer. If this is a mistake, email helen@moodle.org, copying and pasting your attempted post into the email.';
+$string['accountsuspendedtitle'] = 'Account suspended';
 $string['akismetaccountage'] = 'Akismet user account age';
 $string['akismetaccountagedesc'] = 'Skip akismet spam detection on posts from user accounts older than this value.';
 $string['akismetkey'] = 'Akismet API key';
@@ -30,7 +32,7 @@ $string['alreadyreported'] = 'You\'ve already reported this content as spam.';
 $string['badwords'] = 'diet,viagra,football,soccer,live,match';
 $string['badwordslist'] = 'Custom spam words list';
 $string['badwordslistdesc'] = 'A comma separated list of words to use to identify spam.';
-$string['blockedspamdescription'] = 'Spammer - account suspended by multiple spam posts {$a}';
+$string['blockedspamdescription'] = 'Account suspended Friday {$a} after being blocked from posting.';
 $string['cannotdelete'] = 'Cannot delete content for this suspended account.';
 $string['confirmdeletemsg'] = 'Are you sure, you want to mark <strong>{$a->firstname} {$a->lastname} ({$a->username})</strong> as spammer? Data belonging to this user will be blanked out or removed.';
 $string['confirmdelete'] = 'Delete spammer';

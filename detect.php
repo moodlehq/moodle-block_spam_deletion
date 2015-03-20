@@ -152,7 +152,7 @@ function block_spam_deletion_block_post_and_die($submittedcontent, $errorcode) {
     // this seems to be the best way to make it clear.
 
     // Record count of blocked posts and suspend account if necessary..
-    block_spam_deletion_record_blocked_post();
+    $accountsuspended = block_spam_deletion_record_blocked_post();
 
     $PAGE->set_context(context_system::instance());
     $PAGE->set_url('/');
@@ -160,8 +160,13 @@ function block_spam_deletion_block_post_and_die($submittedcontent, $errorcode) {
     $PAGE->set_heading($SITE->fullname);
 
     echo $OUTPUT->header();
-    echo $OUTPUT->heading(get_string('messageblockedtitle', 'block_spam_deletion'));
-    echo $OUTPUT->box(get_string('messageblocked', 'block_spam_deletion'));
+    if ($accountsuspended) {
+        echo $OUTPUT->heading(get_string('accountsuspendedtitle', 'block_spam_deletion'));
+        echo $OUTPUT->box(get_string('accountsuspended', 'block_spam_deletion'));
+    } else {
+        echo $OUTPUT->heading(get_string('messageblockedtitle', 'block_spam_deletion'));
+        echo $OUTPUT->box(get_string('messageblocked', 'block_spam_deletion'));
+    }
     echo $OUTPUT->box(html_writer::tag('pre', s($submittedcontent), array('class' => 'notifytiny')));
     echo $OUTPUT->box("Error code: $errorcode");
     echo $OUTPUT->footer();
@@ -230,6 +235,8 @@ function block_spam_deletion_run_characterset_filtering($content, $language) {
 
 /**
  * Record a user has had their post blocked - and suspend them if necessary.
+ *
+ * @return bool true if user is suspended (on final chance)
  */
 function block_spam_deletion_record_blocked_post() {
     global $USER, $DB;
@@ -252,9 +259,9 @@ function block_spam_deletion_record_blocked_post() {
         // Kill the users session.
         \core\session\manager::kill_user_sessions($USER->id);
 
-        // Redirect to homepage.
-        redirect(new moodle_url('/'), 'Goodbye Spammer');
+        return true;
     } else {
         set_user_preference('block_spam_deletion_blocked_posts_count', $blockcount);
+        return false;
     }
 }
