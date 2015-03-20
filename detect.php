@@ -147,7 +147,7 @@ function block_spam_deletion_user_over_post_threshold() {
  * @param text $errorcode for debugging
  */
 function block_spam_deletion_block_post_and_die($submittedcontent, $errorcode) {
-    global $PAGE, $OUTPUT, $SITE;
+    global $PAGE, $OUTPUT, $SITE, $CFG;
     // It sucks a bit that we die() becase the user can't easily edit their post if they are real, but
     // this seems to be the best way to make it clear.
 
@@ -168,7 +168,9 @@ function block_spam_deletion_block_post_and_die($submittedcontent, $errorcode) {
         echo $OUTPUT->box(get_string('messageblocked', 'block_spam_deletion'));
     }
     echo $OUTPUT->box(html_writer::tag('pre', s($submittedcontent), array('class' => 'notifytiny')));
-    echo $OUTPUT->box("Error code: $errorcode");
+    if (!empty($CFG->debugdeveloper)) {
+        echo $OUTPUT->box("Error code: $errorcode");
+    }
     echo $OUTPUT->footer();
     die;
 }
